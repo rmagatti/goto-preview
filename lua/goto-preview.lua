@@ -1,9 +1,11 @@
 local M = {
   conf = {
-    width = 120;
-    height = 15;
-    default_mappings = false;
-    lsp_configs = {
+    width = 120; -- Width of the floating window
+    height = 15; -- Height of the floating window
+    default_mappings = false; -- Bind default mappings
+    debug = false; -- Print debug information
+    opacity = nil; -- 0-100 opacity level of the floating window where 100 is fully transparent.
+    lsp_configs = { -- Lsp result configs
       lua = {
         get_config = function(data)
           return data.targetUri,{ data.targetRange.start.line + 1, data.targetRange.start.character }
@@ -16,6 +18,14 @@ local M = {
       }
     }
   }
+}
+
+local logger = {
+  debug = function(...)
+    if M.conf.debug then
+      print("goto-preview:", ...)
+    end
+  end
 }
 
 M.setup = function(conf)
@@ -39,7 +49,8 @@ end
 local windows = {}
 
 local open_floating_win = function(target, position)
-  local buffer = vim.api.nvim_create_buf(false, false)
+  local buffer = vim.uri_to_bufnr(target)
+  
   local bufpos = { vim.fn.line(".")-1, vim.fn.col(".") } -- FOR relative='win'
 
   local zindex = vim.tbl_isempty(windows) and 1 or #windows+1
@@ -54,21 +65,20 @@ local open_floating_win = function(target, position)
     win=vim.api.nvim_get_current_win()
   })
 
-  -- vim.api.nvim_win_set_option(new_window, "winblend", 15)
-  vim.api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe') -- necessary?
+  if M.conf.opacity then vim.api.nvim_win_set_option(new_window, "winblend", M.conf.opacity) end
+  vim.api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe')
 
   table.insert(windows, new_window)
 
-  -- print(vim.inspect({
-  --   windows = windows,
-  --   curr_window = curr_window,
-  --   new_window = new_window,
-  --   bufpos = bufpos,
-  --   get_config = vim.api.nvim_win_get_config(new_window),
-  --   get_current_line = vim.api.nvim_get_current_line()
-  -- }))
+  logger.debug(vim.inspect({
+    windows = windows,
+    curr_window = vim.api.nvim_get_current_win(),
+    new_window = new_window,
+    bufpos = bufpos,
+    get_config = vim.api.nvim_win_get_config(new_window),
+    get_current_line = vim.api.nvim_get_current_line()
+  }))
 
-  vim.cmd("e "..target)
   vim.cmd[[
     augroup close_float
       au!
@@ -87,7 +97,7 @@ local handler = function(_, _, result)
   local target = nil
   local cursor_position = {}
 
-  -- The contents of `data` is different depending on the language server :(
+  -- The content of `data` is different depending on the language server :(
   target, cursor_position = M.conf.lsp_configs[vim.bo.filetype].get_config(data)
 
   open_floating_win(target, cursor_position)
