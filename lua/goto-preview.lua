@@ -50,7 +50,7 @@ local windows = {}
 
 local open_floating_win = function(target, position)
   local buffer = vim.uri_to_bufnr(target)
-  
+
   local bufpos = { vim.fn.line(".")-1, vim.fn.col(".") } -- FOR relative='win'
 
   local zindex = vim.tbl_isempty(windows) and 1 or #windows+1
