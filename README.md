@@ -1,5 +1,5 @@
 ## Goto Preview
-A small Neovim plugin for previewing the result of a native lsp goto-definition or goto-implementation call in a floating window.
+A small Neovim plugin for previewing goto definition calls in floating windows.
 
 ### Showcase
 <img src="https://github.com/rmagatti/readme-assets/blob/main/goto-preview-zoomed.gif" />
