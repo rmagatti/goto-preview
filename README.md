@@ -44,6 +44,23 @@ require('goto-preview').setup {
   }
 ```
 
+### Mappings
+There are no mappings by default, you can set `default_mappings = true` in the config to make use of the mappings I use or define your own.
+**Default**
+```viml
+nnoremap gpd <cmd>lua require('goto-preview').goto_preview_definition()<CR>
+nnoremap gpi <cmd>lua require('goto-preview').goto_preview_implementation()<CR>
+nnoremap gP <cmd>lua require('goto-preview').close_all_win()<CR>
+```
+
+**Custom example**
+```lua
+vim.api.nvim_set_keymap("n", "gp", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", {noremap=true})
+```
+
+If you have [Vimpeccable](https://github.com/svermeulen/vimpeccable) installed it'll use it to create the mappings, if not, builtin `nvim_set_keymap` will be used.
+
+### Supported languages
 Goto Preview comes with Lua and Typescript pre-configured since those are the ones I needed at the time. Please do submit a PR to add more pre-configured LSP responses!
 
 **Note:** different language servers have potentially different shapes for the result of the `textDocument/definition` and `textDocument/implementation` calls.
