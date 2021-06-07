@@ -8,7 +8,7 @@ A small Neovim plugin for previewing the result of a native lsp goto-definition 
 There is currently an open [Neovim TUI](https://github.com/neovim/neovim/issues/14735) bug that prevents the correct positioning of more than one preview window.
 One singular preview window should work fine but jumping to a subsequent preview will position it in an undesired spot.
 
-GUIs like [Goneovim](https://github.com/akiyosi/goneovim) and [Uivonim](https://github.com/smolck/uivonim) implement the correct positioning behaviour and will present the plugin's desired effect.
+GUIs like [Goneovim](https://github.com/akiyosi/goneovim) and [Uivonim](https://github.com/smolck/uivonim) implement the correct positioning behaviour and will behave as intended.
 
 
 ### Installation
