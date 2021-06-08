@@ -15,7 +15,12 @@ local M = {
         get_config = function(data)
           return data.uri, { data.range.start.line + 1, data.range.start.character }
         end
-      }
+      };
+      go = {
+        get_config = function(data)
+          return data.uri, { data.range.start.line + 1, data.range.start.character }
+        end
+      };
     }
   }
 }
