@@ -71,6 +71,8 @@ Until more are added one can pass in custom responses through the `lsp_configs` 
 
 
 ### Tested with
+```
 NVIM v0.5.0-dev+7d4f890aa  
 Build type: Release  
 LuaJIT 2.1.0-beta3  
+```
