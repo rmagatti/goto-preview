@@ -1,17 +1,17 @@
-## Goto Preview
+## ⭐ Goto Preview
 A small Neovim plugin for previewing goto definition calls in floating windows.
 
-### Showcase
+### 🚀 Showcase
 <img src="https://github.com/rmagatti/readme-assets/blob/main/goto-preview-zoomed.gif" />
 
-### IMPORTANT NOTE
+### ⚠️ IMPORTANT NOTE
 There is currently an open [Neovim TUI](https://github.com/neovim/neovim/issues/14735) bug that prevents the correct positioning of more than one preview window.
 One singular preview window should work fine but jumping to a subsequent preview will position it in an undesired spot.
 
-GUIs like [Goneovim](https://github.com/akiyosi/goneovim) and [Uivonim](https://github.com/smolck/uivonim) implement the correct positioning behaviour and will behave as intended.
+🎉 GUIs like [Goneovim](https://github.com/akiyosi/goneovim) and [Uivonim](https://github.com/smolck/uivonim) implement the correct positioning behaviour and will behave as intended.
 
 
-### Installation
+### 📦 Installation
 Packer.nvim
 ```lua
 use {
@@ -22,7 +22,7 @@ use {
 }
 ```
 
-### Configuration
+### ⚙️ Configuration
 
 **Default**
 ```lua
@@ -47,7 +47,7 @@ require('goto-preview').setup {
   }
 ```
 
-### Mappings
+### ⌨️ Mappings
 There are no mappings by default, you can set `default_mappings = true` in the config to make use of the mappings I use or define your own.  
 **Default**
 ```viml
