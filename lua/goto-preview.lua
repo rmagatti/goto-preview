@@ -145,9 +145,6 @@ M.goto_preview_implementation = M.lsp_request(false)
 
 M.apply_default_mappings = function()
   local has_vimp, vimp = pcall(require, "vimp")
-  if not has_vimp then
-    print('{default_mappings = true} option requires vimpeccable "vimp" to exist.')
-  end
   if M.conf.default_mappings then
     if has_vimp then
       vimp.unmap_all()
