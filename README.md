@@ -23,6 +23,7 @@ use {
 ```
 
 ### Configuration
+
 **Default**
 ```lua
 require('goto-preview').setup {
