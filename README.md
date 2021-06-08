@@ -47,7 +47,7 @@ require('goto-preview').setup {
 ```
 
 ### Mappings
-There are no mappings by default, you can set `default_mappings = true` in the config to make use of the mappings I use or define your own.
+There are no mappings by default, you can set `default_mappings = true` in the config to make use of the mappings I use or define your own.  
 **Default**
 ```viml
 nnoremap gpd <cmd>lua require('goto-preview').goto_preview_definition()<CR>
