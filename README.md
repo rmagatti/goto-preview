@@ -32,18 +32,6 @@ require('goto-preview').setup {
     default_mappings = false; -- Bind default mappings
     debug = false; -- Print debug information
     opacity = nil; -- 0-100 opacity level of the floating window where 100 is fully transparent.
-    lsp_configs = { -- Lsp result configs
-      lua = {
-        get_config = function(data)
-          return data.targetUri,{ data.targetRange.start.line + 1, data.targetRange.start.character }
-        end
-      };
-      typescript = {
-        get_config = function(data)
-          return data.uri, { data.range.start.line + 1, data.range.start.character }
-        end
-      }
-    }
   }
 ```
 
@@ -64,7 +52,7 @@ vim.api.nvim_set_keymap("n", "gp", "<cmd>lua require('goto-preview').goto_previe
 If you have [Vimpeccable](https://github.com/svermeulen/vimpeccable) installed it'll use it to create the mappings, if not, builtin `nvim_set_keymap` will be used.
 
 ### Supported languages
-Goto Preview comes with Lua and Typescript pre-configured since those are the ones I needed at the time. Please do submit a PR to add more pre-configured LSP responses!
+Goto Preview should work with LSP responses for most languages now! If something doesn't work as expected, drop an issue and I'll be happy to check it out!
 
 **Note:** different language servers have potentially different shapes for the result of the `textDocument/definition` and `textDocument/implementation` calls.
 Until more are added one can pass in custom responses through the `lsp_configs` config value. Just follow the same pattern returning two values, a `target (string)` and a `cursor_position ({line_num, col_num})`. The `data` parameter is the `[1]` of the LSP's `result` of the definition/implementation calls and is what gets passed into the custom `get_config` function.
