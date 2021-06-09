@@ -6,21 +6,12 @@ local M = {
     debug = false; -- Print debug information
     opacity = nil; -- 0-100 opacity level of the floating window where 100 is fully transparent.
     lsp_configs = { -- Lsp result configs
-      lua = {
-        get_config = function(data)
-          return data.targetUri,{ data.targetRange.start.line + 1, data.targetRange.start.character }
-        end
-      };
-      typescript = {
-        get_config = function(data)
-          return data.uri, { data.range.start.line + 1, data.range.start.character }
-        end
-      };
-      go = {
-        get_config = function(data)
-          return data.uri, { data.range.start.line + 1, data.range.start.character }
-        end
-      };
+      get_config = function(data)
+        local uri = data.targetUri or data.uri
+        local range = data.targetRange or data.range
+
+        return uri, { range.start.line +1, range.start.character }
+      end;
     }
   }
 }
@@ -102,8 +93,7 @@ local handler = function(_, _, result)
   local target = nil
   local cursor_position = {}
 
-  -- The content of `data` is different depending on the language server :(
-  target, cursor_position = M.conf.lsp_configs[vim.bo.filetype].get_config(data)
+  target, cursor_position = M.conf.lsp_configs.get_config(data)
 
   open_floating_win(target, cursor_position)
 end
@@ -111,6 +101,7 @@ end
 M.lsp_request = function(definition)
   return function()
     local params = vim.lsp.util.make_position_params()
+
     if definition then
       local success, _ = pcall(vim.lsp.buf_request, 0, "textDocument/definition", params, handler)
       if not success then
@@ -145,9 +136,6 @@ M.goto_preview_implementation = M.lsp_request(false)
 
 M.apply_default_mappings = function()
   local has_vimp, vimp = pcall(require, "vimp")
-  if not has_vimp then
-    print('{default_mappings = true} option requires vimpeccable "vimp" to exist.')
-  end
   if M.conf.default_mappings then
     if has_vimp then
       vimp.unmap_all()
