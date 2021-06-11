@@ -1,5 +1,5 @@
 ## ⭐ Goto Preview
-A small Neovim plugin for previewing goto definition calls in floating windows.
+A small Neovim plugin for previewing native LSP's goto definition calls in floating windows.
 
 ### 🚀 Showcase
 <img src="https://github.com/rmagatti/readme-assets/blob/main/goto-preview-zoomed.gif" />
@@ -9,7 +9,6 @@ There is currently an open [Neovim TUI](https://github.com/neovim/neovim/issues/
 One singular preview window should work fine but jumping to a subsequent preview will position it in an undesired spot.
 
 🎉 GUIs like [Goneovim](https://github.com/akiyosi/goneovim) and [Uivonim](https://github.com/smolck/uivonim) implement the correct positioning behaviour and will behave as intended.
-
 
 ### 📦 Installation
 Packer.nvim
