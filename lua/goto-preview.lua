@@ -12,7 +12,8 @@ local M = {
 
         return uri, { range.start.line +1, range.start.character }
       end;
-    }
+    };
+    post_open_hook = nil -- A function taking two arguments, a buffer and a window to be ran as a hook.
   }
 }
 
@@ -46,11 +47,8 @@ local windows = {}
 
 local open_floating_win = function(target, position)
   local buffer = vim.uri_to_bufnr(target)
-
   local bufpos = { vim.fn.line(".")-1, vim.fn.col(".") } -- FOR relative='win'
-
   local zindex = vim.tbl_isempty(windows) and 1 or #windows+1
-
   local new_window = vim.api.nvim_open_win(buffer, true, {
     relative='win',
     width=M.conf.width,
@@ -81,6 +79,9 @@ local open_floating_win = function(target, position)
       au WinClosed * lua require('goto-preview').remove_curr_win()
     augroup end
   ]]
+
+  local success, result = pcall(M.conf.post_open_hook, buffer, new_window)
+  logger.debug("post_open_hook call success:", success, result)
 
   vim.api.nvim_win_set_cursor(new_window, position)
 end

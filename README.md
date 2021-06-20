@@ -31,8 +31,12 @@ require('goto-preview').setup {
     default_mappings = false; -- Bind default mappings
     debug = false; -- Print debug information
     opacity = nil; -- 0-100 opacity level of the floating window where 100 is fully transparent.
+    post_open_hook = nil -- A function taking two arguments, a buffer and a window to be ran as a hook.
   }
 ```
+
+The `post_open_hook` function gets called right before setting the cursor position in the new floating window.
+One can use this to set custom key bindings or really anything else they want to do when a new preview window opens.
 
 ### ⌨️ Mappings
 There are no mappings by default, you can set `default_mappings = true` in the config to make use of the mappings I use or define your own.  
