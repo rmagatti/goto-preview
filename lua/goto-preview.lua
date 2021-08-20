@@ -80,10 +80,14 @@ local open_floating_win = function(target, position)
     augroup end
   ]]
 
-  local success, result = pcall(M.conf.post_open_hook, buffer, new_window)
-  logger.debug("post_open_hook call success:", success, result)
+  M.run_hook_function(buffer, new_window)
 
   vim.api.nvim_win_set_cursor(new_window, position)
+end
+
+M.run_hook_function = function(buffer, new_window)
+  local success, result = pcall(M.conf.post_open_hook, buffer, new_window)
+  logger.debug("post_open_hook call success:", success, result)
 end
 
 local handler = function(_, _, result)
