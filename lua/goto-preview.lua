@@ -78,7 +78,7 @@ local open_floating_win = function(target, position)
       au!
       au WinClosed * lua require('goto-preview').remove_curr_win()
     augroup end
-   ]]
+  ]]
 
   M.run_hook_function(buffer, new_window)
 
