@@ -1,6 +1,6 @@
 local M = {
   conf = {
-    width = 120; -- Width of the floating window
+    width = 80; -- Width of the floating window
     height = 15; -- Height of the floating window
     default_mappings = false; -- Bind default mappings
     debug = false; -- Print debug information
@@ -78,12 +78,16 @@ local open_floating_win = function(target, position)
       au!
       au WinClosed * lua require('goto-preview').remove_curr_win()
     augroup end
-  ]]
+   ]]
 
-  local success, result = pcall(M.conf.post_open_hook, buffer, new_window)
-  logger.debug("post_open_hook call success:", success, result)
+  M.run_hook_function(buffer, new_window)
 
   vim.api.nvim_win_set_cursor(new_window, position)
+end
+
+M.run_hook_function = function(buffer, new_window)
+  local success, result = pcall(M.conf.post_open_hook, buffer, new_window)
+  logger.debug("post_open_hook call success:", success, result)
 end
 
 local handler = function(_, _, result)
