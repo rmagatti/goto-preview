@@ -90,9 +90,13 @@ M.run_hook_function = function(buffer, new_window)
   logger.debug("post_open_hook call success:", success, result)
 end
 
-local handler = function(_, _, result)
+local handler = function(err, result, ctx, config)
   if not result then return end
 
+  print('==== err', vim.inspect(err))
+  print('==== result', vim.inspect(result))
+  print('==== ctx', vim.inspect(ctx))
+  print('==== config', vim.inspect(config))
   local data = result[1]
 
   local target = nil
