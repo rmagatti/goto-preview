@@ -90,7 +90,7 @@ M.run_hook_function = function(buffer, new_window)
   logger.debug("post_open_hook call success:", success, result)
 end
 
-local handler = function(_err, result, _ctx, _config)
+local handle = function(result)
   if not result then return end
 
   local data = result[1]
@@ -103,17 +103,34 @@ local handler = function(_err, result, _ctx, _config)
   open_floating_win(target, cursor_position)
 end
 
+local legacy_handler = function(_, _, result)
+  handle(result)
+end
+
+local handler = function(_, result, _, _)
+  handle(result)
+end
+
+local get_handler = function()
+  -- Only really need to check one of the handlers
+  if debug.getinfo(vim.lsp.handlers['textDocument/definition']).nparams == 4 then
+    return handler
+  else
+    return legacy_handler
+  end
+end
+
 M.lsp_request = function(definition)
   return function()
     local params = vim.lsp.util.make_position_params()
 
     if definition then
-      local success, _ = pcall(vim.lsp.buf_request, 0, "textDocument/definition", params, handler)
+      local success, _ = pcall(vim.lsp.buf_request, 0, "textDocument/definition", params, get_handler())
       if not success then
         print('goto-preview: Error calling LSP "textDocument/definition". The current language lsp might not support it.')
       end
     else
-      local success, _ = pcall(vim.lsp.buf_request, 0, "textDocument/implementation", params, handler)
+      local success, _ = pcall(vim.lsp.buf_request, 0, "textDocument/implementation", params, get_handler())
       if not success then
         print('goto-preview: Error calling LSP "textDocument/implementation". The current language lsp might not support it.')
       end
@@ -142,22 +159,22 @@ M.goto_preview_implementation = M.lsp_request(false)
 M.apply_default_mappings = function()
   local has_vimp, vimp = pcall(require, "vimp")
   if M.conf.default_mappings then
-    if has_vimp then
-      vimp.unmap_all()
-      vimp.nnoremap('gpi', M.lsp_request(false))
-      vimp.nnoremap('gpd', M.lsp_request(true))
-      vimp.nnoremap('gP', M.close_all_win)
+    -- if has_vimp then
+    --   vimp.unmap_all()
+    --   vimp.nnoremap('gpi', M.lsp_request(false))
+    --   vimp.nnoremap('gpd', M.lsp_request(true))
+    --   vimp.nnoremap('gP', M.close_all_win)
 
-      -- Resize windows
-      vimp.nnoremap('<left>', '<C-w><')
-      vimp.nnoremap('<right>', '<C-w>>')
-      vimp.nnoremap('<up>', '<C-w>-')
-      vimp.nnoremap('<down>', '<C-w>+')
-    else
+    --   -- Resize windows
+    --   vimp.nnoremap('<left>', '<C-w><')
+    --   vimp.nnoremap('<right>', '<C-w>>')
+    --   vimp.nnoremap('<up>', '<C-w>-')
+    --   vimp.nnoremap('<down>', '<C-w>+')
+    -- else
       vim.api.nvim_set_keymap("n", "gpd", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", {noremap=true})
       vim.api.nvim_set_keymap("n", "gpi", "<cmd>lua require('goto-preview').goto_preview_implementation()<CR>", {noremap=true})
       vim.api.nvim_set_keymap("n", "gP", "<cmd>lua require('goto-preview').close_all_win()<CR>", {noremap=true})
-    end
+    -- end
   end
 end
 
