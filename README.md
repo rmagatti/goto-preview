@@ -4,11 +4,18 @@ A small Neovim plugin for previewing native LSP's goto definition calls in float
 ### 🚀 Showcase
 <img src="https://github.com/rmagatti/readme-assets/blob/main/goto-preview-zoomed.gif" />
 
+#### 🔗 References
+<img src="https://github.com/rmagatti/readme-assets/blob/main/goto-preview-references.gif" />
+
 ### ⚠️ IMPORTANT NOTE
 There is currently an open [Neovim TUI](https://github.com/neovim/neovim/issues/14735) bug that prevents the correct positioning of more than one preview window.
 One singular preview window should work fine but jumping to a subsequent preview will position it in an undesired spot.
 
 🎉 GUIs like [Goneovim](https://github.com/akiyosi/goneovim) and [Uivonim](https://github.com/smolck/uivonim) implement the correct positioning behaviour and will behave as intended.
+
+#### ⚠️ UPDATE
+The issue is fixed in Neovim v0.6.0-dev (master) and is set for the milestone `0.5.1` at the time of writing.
+https://github.com/neovim/neovim/pull/14770
 
 ### 📦 Installation
 Packer.nvim
@@ -51,8 +58,6 @@ nnoremap gP <cmd>lua require('goto-preview').close_all_win()<CR>
 ```lua
 vim.api.nvim_set_keymap("n", "gp", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", {noremap=true})
 ```
-
-If you have [Vimpeccable](https://github.com/svermeulen/vimpeccable) installed it'll use it to create the mappings, if not, builtin `nvim_set_keymap` will be used.
 
 ### Supported languages
 Goto Preview should work with LSP responses for most languages now! If something doesn't work as expected, drop an issue and I'll be happy to check it out!
