@@ -2,6 +2,9 @@ local pickers = require('telescope.pickers')
 local make_entry = require('telescope.make_entry')
 local conf = require('telescope.config').values
 local finders = require('telescope.finders')
+local themes = require('telescope.themes')
+local actions = require('telescope.actions')
+local action_state = require('telescope.actions.state')
 
 local M = {
   conf = {
@@ -17,9 +20,6 @@ local M = {
 
         return uri, { range.start.line +1, range.start.character }
       end;
-      -- get_references_config = function(data)
-      --   print('==== data', vim.inspect(data))
-      -- end
     };
     post_open_hook = nil -- A function taking two arguments, a buffer and a window to be ran as a hook.
   }
@@ -90,6 +90,7 @@ local open_floating_win = function(target, position)
 
   M.run_hook_function(buffer, new_window)
 
+  print('==== new_window, position', vim.inspect(new_window), vim.inspect(position))
   vim.api.nvim_win_set_cursor(new_window, position)
 end
 
@@ -99,22 +100,8 @@ M.run_hook_function = function(buffer, new_window)
 end
 
 local function open_references_previewer(prompt_title, items, find_opts)
-  local opts = find_opts.opts or {
-    -- opts = opts.telescope,
-    entry_maker = function(line)
-      return {
-        valid = line ~= nil,
-        value = line,
-        ordinal = line.idx .. line.title,
-        display = string.format('%s%d: %s', '', line.idx, line.title),
-      }
-    end,
-    -- attach_mappings = attach_code_action_mappings,
-    hide_preview = false,
-  }
-
-  -- local entry_maker = find_opts.entry_maker or make_entry.gen_from_quickfix(opts)
-  -- local attach_mappings = find_opts.attach_mappings or attach_location_mappings
+  local opts = themes.get_dropdown({hide_preview = false})
+  local entry_maker = make_entry.gen_from_quickfix(opts)
   local previewer = nil
   if not find_opts.hide_preview then
     previewer = conf.qflist_previewer(opts)
@@ -122,13 +109,23 @@ local function open_references_previewer(prompt_title, items, find_opts)
 
   pickers.new(opts, {
     prompt_title = prompt_title,
-    finder = finders.new_table({
+    finder = finders.new_table {
       results = items,
-      -- entry_maker = entry_maker,
-    }),
+      entry_maker = entry_maker,
+    },
     previewer = previewer,
     sorter = conf.generic_sorter(opts),
-    -- attach_mappings = attach_mappings,
+    attach_mappings = function(prompt_bufnr)
+      actions.select_default:replace(function()
+        local selection = action_state.get_selected_entry()
+        actions.close(prompt_bufnr)
+
+        local val = selection.value
+        open_floating_win(vim.uri_from_fname(val.filename), { val.lnum, val.col })
+      end)
+
+      return true
+    end,
   }):find()
 end
 
@@ -147,17 +144,11 @@ end
 
 local handle_references = function(result)
   if not result then return end
-  print('==== results', vim.inspect(result))
-  local sanitized_list = {}
+  local items = {}
 
-  -- for data in pairs(result) do
-  --   local target, cursor_position = M.conf.lsp_configs.get_config(data)
-  --   table.insert(sanitized_list, {target=target, cursor_position=cursor_position})
-  -- end
+  vim.list_extend(items, vim.lsp.util.locations_to_items(result) or {})
 
-  -- Error executing vim.schedule lua callback: ...k/packer/opt/telescope.nvim/lua/telescope/make_entry.lua:317: attempt to concatenate field 'text' (a nil value)
-  -- Fiture out how to preview the pickers correctly
-  open_references_previewer('References', result, {})
+  open_references_previewer('References', items, {})
 end
 
 local legacy_handler = function(lsp_call)
@@ -172,7 +163,6 @@ end
 
 local handler = function(lsp_call)
   return function(_, result, _, _)
-    print('==== lsp_call', lsp_call)
     if lsp_call ~= nil and lsp_call == 'textDocument/references' then
       handle_references(result)
     else
