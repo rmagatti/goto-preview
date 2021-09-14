@@ -1,6 +1,6 @@
 local pickers = require('telescope.pickers')
 local make_entry = require('telescope.make_entry')
-local conf = require('telescope.config').values
+local telescope_conf = require('telescope.config').values
 local finders = require('telescope.finders')
 local themes = require('telescope.themes')
 local actions = require('telescope.actions')
@@ -11,6 +11,7 @@ local M = {
     width = 120; -- Width of the floating window
     height = 15; -- Height of the floating window
     default_mappings = false; -- Bind default mappings
+    resizing_mappings = false;
     debug = false; -- Print debug information
     opacity = nil; -- 0-100 opacity level of the floating window where 100 is fully transparent.
     lsp_configs = { -- Lsp result configs
@@ -21,7 +22,10 @@ local M = {
         return uri, { range.start.line +1, range.start.character }
       end;
     };
-    post_open_hook = nil -- A function taking two arguments, a buffer and a window to be ran as a hook.
+    post_open_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
+    references = {
+      telescope = themes.get_dropdown({hide_preview = false})
+    }
   }
 }
 
@@ -37,9 +41,8 @@ M.setup = function(conf)
   if conf and not vim.tbl_isempty(conf) then
     M.conf = vim.tbl_extend('force', M.conf, conf)
 
-    if M.conf.default_mappings then
-      M.apply_default_mappings()
-    end
+    if M.conf.default_mappings then M.apply_default_mappings() end
+    if M.conf.resizing_mappings then M.apply_resizing_mappings() end
   end
 end
 
@@ -98,12 +101,13 @@ M.run_hook_function = function(buffer, new_window)
   logger.debug("post_open_hook call success:", success, result)
 end
 
-local function open_references_previewer(prompt_title, items, find_opts)
-  local opts = themes.get_dropdown({hide_preview = false})
+local function open_references_previewer(prompt_title, items)
+  local opts = M.conf.references.telescope
   local entry_maker = make_entry.gen_from_quickfix(opts)
   local previewer = nil
-  if not find_opts.hide_preview then
-    previewer = conf.qflist_previewer(opts)
+
+  if not opts.hide_preview then
+    previewer = telescope_conf.qflist_previewer(opts)
   end
 
   pickers.new(opts, {
@@ -113,7 +117,7 @@ local function open_references_previewer(prompt_title, items, find_opts)
       entry_maker = entry_maker,
     },
     previewer = previewer,
-    sorter = conf.generic_sorter(opts),
+    sorter = telescope_conf.generic_sorter(opts),
     attach_mappings = function(prompt_bufnr)
       actions.select_default:replace(function()
         local selection = action_state.get_selected_entry()
@@ -147,7 +151,7 @@ local handle_references = function(result)
 
   vim.list_extend(items, vim.lsp.util.locations_to_items(result) or {})
 
-  open_references_previewer('References', items, {})
+  open_references_previewer('References', items)
 end
 
 local legacy_handler = function(lsp_call)
@@ -229,7 +233,11 @@ M.apply_default_mappings = function()
     vim.api.nvim_set_keymap("n", "gpi", "<cmd>lua require('goto-preview').goto_preview_implementation()<CR>", {noremap=true})
     vim.api.nvim_set_keymap("n", "gpr", "<cmd>lua require('goto-preview').goto_preview_references()<CR>", {noremap=true})
     vim.api.nvim_set_keymap("n", "gP", "<cmd>lua require('goto-preview').close_all_win()<CR>", {noremap=true})
+  end
+end
 
+M.apply_resizing_mappings = function()
+  if M.conf.resizing_mappings then
     vim.api.nvim_set_keymap('n', '<left>', '<C-w><', {noremap=true})
     vim.api.nvim_set_keymap('n', '<right>', '<C-w>>', {noremap=true})
     vim.api.nvim_set_keymap('n', '<up>', '<C-w>-', {noremap=true})
