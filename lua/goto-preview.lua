@@ -90,7 +90,6 @@ local open_floating_win = function(target, position)
 
   M.run_hook_function(buffer, new_window)
 
-  print('==== new_window, position', vim.inspect(new_window), vim.inspect(position))
   vim.api.nvim_win_set_cursor(new_window, position)
 end
 
