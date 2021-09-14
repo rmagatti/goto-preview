@@ -59,8 +59,6 @@ nnoremap gP <cmd>lua require('goto-preview').close_all_win()<CR>
 vim.api.nvim_set_keymap("n", "gp", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", {noremap=true})
 ```
 
-If you have [Vimpeccable](https://github.com/svermeulen/vimpeccable) installed it'll use it to create the mappings, if not, builtin `nvim_set_keymap` will be used.
-
 ### Supported languages
 Goto Preview should work with LSP responses for most languages now! If something doesn't work as expected, drop an issue and I'll be happy to check it out!
 

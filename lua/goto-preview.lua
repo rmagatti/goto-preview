@@ -224,25 +224,16 @@ M.goto_preview_references = M.lsp_request_references
 -- Mappings
 
 M.apply_default_mappings = function()
-  local has_vimp, vimp = pcall(require, "vimp")
   if M.conf.default_mappings then
-    -- if has_vimp then
-    --   vimp.unmap_all()
-    --   vimp.nnoremap('gpi', M.lsp_request(false))
-    --   vimp.nnoremap('gpd', M.lsp_request(true))
-    --   vimp.nnoremap('gP', M.close_all_win)
-
-    --   -- Resize windows
-    --   vimp.nnoremap('<left>', '<C-w><')
-    --   vimp.nnoremap('<right>', '<C-w>>')
-    --   vimp.nnoremap('<up>', '<C-w>-')
-    --   vimp.nnoremap('<down>', '<C-w>+')
-    -- else
     vim.api.nvim_set_keymap("n", "gpd", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", {noremap=true})
     vim.api.nvim_set_keymap("n", "gpi", "<cmd>lua require('goto-preview').goto_preview_implementation()<CR>", {noremap=true})
     vim.api.nvim_set_keymap("n", "gpr", "<cmd>lua require('goto-preview').goto_preview_references()<CR>", {noremap=true})
     vim.api.nvim_set_keymap("n", "gP", "<cmd>lua require('goto-preview').close_all_win()<CR>", {noremap=true})
-    -- end
+
+    vim.api.nvim_set_keymap('n', '<left>', '<C-w><', {noremap=true})
+    vim.api.nvim_set_keymap('n', '<right>', '<C-w>>', {noremap=true})
+    vim.api.nvim_set_keymap('n', '<up>', '<C-w>-', {noremap=true})
+    vim.api.nvim_set_keymap('n', '<down>', '<C-w>+', {noremap=true})
   end
 end
 
