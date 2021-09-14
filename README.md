@@ -10,6 +10,10 @@ One singular preview window should work fine but jumping to a subsequent preview
 
 🎉 GUIs like [Goneovim](https://github.com/akiyosi/goneovim) and [Uivonim](https://github.com/smolck/uivonim) implement the correct positioning behaviour and will behave as intended.
 
+#### ⚠️ UPDATE
+The issue is fixed in Neovim v0.6.0-dev (master) and is set for the milestone `0.5.1` at the time of writing.
+https://github.com/neovim/neovim/pull/14770
+
 ### 📦 Installation
 Packer.nvim
 ```lua
