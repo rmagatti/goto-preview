@@ -25,13 +25,11 @@ local M = {
 }
 
 M.setup = function(conf)
-  if conf and not vim.tbl_isempty(conf) then
-    M.conf = vim.tbl_extend('force', M.conf, conf)
-    lib.setup_lib(M.conf)
+  M.conf = vim.tbl_extend('force', M.conf, conf)
+  lib.setup_lib(M.conf)
 
-    if M.conf.default_mappings then M.apply_default_mappings() end
-    if M.conf.resizing_mappings then M.apply_resizing_mappings() end
-  end
+  if M.conf.default_mappings then M.apply_default_mappings() end
+  if M.conf.resizing_mappings then M.apply_resizing_mappings() end
 end
 
 local function print_lsp_error(lsp_call)
