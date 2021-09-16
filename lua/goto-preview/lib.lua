@@ -41,14 +41,13 @@ end
 local open_floating_win = function(target, position)
   local buffer = vim.uri_to_bufnr(target)
   local bufpos = { vim.fn.line(".")-1, vim.fn.col(".") } -- FOR relative='win'
-  local zindex = vim.tbl_isempty(windows) and 1 or #windows+1
+  -- local zindex = vim.tbl_isempty(windows) and 1 or #windows+1 -- Temporarily removing zindex option to mitigate issue with https://github.com/folke/zen-mode.nvim
   local new_window = vim.api.nvim_open_win(buffer, true, {
     relative='win',
     width=M.conf.width,
     height=M.conf.height,
     border={"↖", "─" ,"┐", "│", "┘", "─", "└", "│"},
     bufpos=bufpos,
-    zindex=zindex,
     win=vim.api.nvim_get_current_win()
   })
 
