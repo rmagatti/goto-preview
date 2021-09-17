@@ -1,12 +1,31 @@
-local pickers = require('telescope.pickers')
-local make_entry = require('telescope.make_entry')
-local telescope_conf = require('telescope.config').values
-local finders = require('telescope.finders')
-local actions = require('telescope.actions')
-local action_state = require('telescope.actions.state')
+local has_telescope = pcall(require, 'telescope')
+
+local pickers
+local make_entry
+local telescope_conf
+local finders
+local actions
+local action_state
+local themes
+
+local function init_telescope()
+  pickers = require('telescope.pickers')
+  make_entry = require('telescope.make_entry')
+  telescope_conf = require('telescope.config').values
+  finders = require('telescope.finders')
+  actions = require('telescope.actions')
+  action_state = require('telescope.actions.state')
+  themes = require('telescope.themes')
+end
+
+if has_telescope then init_telescope() end
 
 local M = {
-  conf = {}
+  conf = {},
+  has_telescope = has_telescope,
+  telescope = has_telescope and {
+    themes = themes
+  } or nil
 }
 
 M.setup_lib = function(conf)
@@ -39,7 +58,7 @@ local run_hook_function = function(buffer, new_window)
 end
 
 local open_floating_win = function(target, position)
-  local buffer = vim.uri_to_bufnr(target)
+  local buffer = type(target) == 'string' and vim.uri_to_bufnr(target) or target
   local bufpos = { vim.fn.line(".")-1, vim.fn.col(".") } -- FOR relative='win'
   -- local zindex = vim.tbl_isempty(windows) and 1 or #windows+1 -- Temporarily removing zindex option to mitigate issue with https://github.com/folke/zen-mode.nvim
   local new_window = vim.api.nvim_open_win(buffer, true, {
@@ -76,36 +95,41 @@ local open_floating_win = function(target, position)
 
   vim.api.nvim_win_set_cursor(new_window, position)
 end
+M.open_floating_win = open_floating_win
 
 local function open_references_previewer(prompt_title, items)
-  local opts = M.conf.references.telescope
-  local entry_maker = make_entry.gen_from_quickfix(opts)
-  local previewer = nil
+  if has_telescope then
+    local opts = M.conf.references.telescope
+    local entry_maker = make_entry.gen_from_quickfix(opts)
+    local previewer = nil
 
-  if not opts.hide_preview then
-    previewer = telescope_conf.qflist_previewer(opts)
+    if not opts.hide_preview then
+      previewer = telescope_conf.qflist_previewer(opts)
+    end
+
+    pickers.new(opts, {
+      prompt_title = prompt_title,
+      finder = finders.new_table {
+        results = items,
+        entry_maker = entry_maker,
+      },
+      previewer = previewer,
+      sorter = telescope_conf.generic_sorter(opts),
+      attach_mappings = function(prompt_bufnr)
+        actions.select_default:replace(function()
+          local selection = action_state.get_selected_entry()
+          actions.close(prompt_bufnr)
+
+          local val = selection.value
+          open_floating_win(vim.uri_from_fname(val.filename), { val.lnum, val.col })
+        end)
+
+        return true
+      end,
+    }):find()
+  else
+    error('goto_preview_references requires Telescope.nvim')
   end
-
-  pickers.new(opts, {
-    prompt_title = prompt_title,
-    finder = finders.new_table {
-      results = items,
-      entry_maker = entry_maker,
-    },
-    previewer = previewer,
-    sorter = telescope_conf.generic_sorter(opts),
-    attach_mappings = function(prompt_bufnr)
-      actions.select_default:replace(function()
-        local selection = action_state.get_selected_entry()
-        actions.close(prompt_bufnr)
-
-        local val = selection.value
-        open_floating_win(vim.uri_from_fname(val.filename), { val.lnum, val.col })
-      end)
-
-      return true
-    end,
-  }):find()
 end
 
 local handle = function(result)

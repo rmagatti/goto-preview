@@ -1,4 +1,3 @@
-local themes = require('telescope.themes')
 local lib = require('goto-preview.lib')
 
 local M = {
@@ -19,7 +18,7 @@ local M = {
     };
     post_open_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
     references = {
-      telescope = themes.get_dropdown({ hide_preview = false })
+      telescope = lib.has_telescope and lib.telescope.themes.get_dropdown({ hide_preview = false }) or nil
     }
   }
 }
@@ -80,7 +79,9 @@ M.apply_default_mappings = function()
   if M.conf.default_mappings then
     vim.api.nvim_set_keymap("n", "gpd", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", {noremap=true})
     vim.api.nvim_set_keymap("n", "gpi", "<cmd>lua require('goto-preview').goto_preview_implementation()<CR>", {noremap=true})
-    vim.api.nvim_set_keymap("n", "gpr", "<cmd>lua require('goto-preview').goto_preview_references()<CR>", {noremap=true})
+    if lib.has_telescope then
+      vim.api.nvim_set_keymap("n", "gpr", "<cmd>lua require('goto-preview').goto_preview_references()<CR>", {noremap=true})
+    end
     vim.api.nvim_set_keymap("n", "gP", "<cmd>lua require('goto-preview').close_all_win()<CR>", {noremap=true})
   end
 end
