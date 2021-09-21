@@ -24,7 +24,8 @@ local M = {
 }
 
 M.setup = function(conf)
-  M.conf = vim.tbl_extend('force', M.conf, conf)
+  M.conf = vim.tbl_deep_extend('force', M.conf, conf)
+  lib.logger.debug('non-lib:', vim.inspect(M.conf))
   lib.setup_lib(M.conf)
 
   if M.conf.default_mappings then M.apply_default_mappings() end
