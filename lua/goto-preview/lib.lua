@@ -29,7 +29,8 @@ local M = {
 }
 
 M.setup_lib = function(conf)
-  M.conf = vim.tbl_extend('force', M.conf, conf)
+  M.conf = vim.tbl_deep_extend('force', M.conf, conf)
+  M.logger.debug('lib:', vim.inspect(M.conf))
 end
 
 local logger = {
