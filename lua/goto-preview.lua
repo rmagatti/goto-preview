@@ -57,17 +57,16 @@ M.lsp_request_references = function()
   if not success then print_lsp_error(lsp_call) end
 end
 
-M.close_all_win = function()
-  for index = #lib.windows, 1, -1 do
-    local window = lib.windows[index]
-    pcall(vim.api.nvim_win_close, window, true)
-  end
+local close_if_is_goto_preview = function(win_handle)
+    if vim.api.nvim_win_get_var(win_handle, 'is-goto-preview-window') == 1 then
+      vim.api.nvim_win_close(win_handle, true)
+    end
 end
 
-M.remove_curr_win = function()
-  local index = lib.tablefind(lib.windows, vim.api.nvim_get_current_win())
-  if index then
-    table.remove(lib.windows, index)
+M.close_all_win = function()
+  local windows = vim.api.nvim_tabpage_list_wins(0)
+  for _, win in pairs(windows) do
+    pcall(close_if_is_goto_preview, win)
   end
 end
 

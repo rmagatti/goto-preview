@@ -42,16 +42,6 @@ local logger = {
 }
 
 M.logger = logger
-M.tablefind = function(tab,el)
-  for index, value in pairs(tab) do
-    if value == el then
-      return index
-    end
-  end
-end
-
-local windows = {}
-M.windows = windows
 
 local run_hook_function = function(buffer, new_window)
   local success, result = pcall(M.conf.post_open_hook, buffer, new_window)
@@ -61,7 +51,6 @@ end
 local open_floating_win = function(target, position)
   local buffer = type(target) == 'string' and vim.uri_to_bufnr(target) or target
   local bufpos = { vim.fn.line(".")-1, vim.fn.col(".") } -- FOR relative='win'
-  -- local zindex = vim.tbl_isempty(windows) and 1 or #windows+1 -- Temporarily removing zindex option to mitigate issue with https://github.com/folke/zen-mode.nvim
   local new_window = vim.api.nvim_open_win(buffer, true, {
     relative='win',
     width=M.conf.width,
@@ -73,24 +62,15 @@ local open_floating_win = function(target, position)
 
   if M.conf.opacity then vim.api.nvim_win_set_option(new_window, "winblend", M.conf.opacity) end
   vim.api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe')
-
-  table.insert(windows, new_window)
+  vim.api.nvim_win_set_var(new_window, "is-goto-preview-window", 1)
 
   logger.debug(vim.inspect({
-    windows = windows,
     curr_window = vim.api.nvim_get_current_win(),
     new_window = new_window,
     bufpos = bufpos,
     get_config = vim.api.nvim_win_get_config(new_window),
     get_current_line = vim.api.nvim_get_current_line()
   }))
-
-  vim.cmd[[
-    augroup close_float
-      au!
-      au WinClosed * lua require('goto-preview').remove_curr_win()
-    augroup end
-  ]]
 
   run_hook_function(buffer, new_window)
 
