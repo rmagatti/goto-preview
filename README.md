@@ -8,14 +8,9 @@ A small Neovim plugin for previewing native LSP's goto definition calls in float
 <img src="https://github.com/rmagatti/readme-assets/blob/main/goto-preview-references.gif" />
 
 ### ⚠️ IMPORTANT NOTE
-There is currently an open [Neovim TUI](https://github.com/neovim/neovim/issues/14735) bug that prevents the correct positioning of more than one preview window.
-One singular preview window should work fine but jumping to a subsequent preview will position it in an undesired spot.
+Make sure you use Neovim `0.5.1` or GUIs like [Goneovim](https://github.com/akiyosi/goneovim) and [Uivonim](https://github.com/smolck/uivonim).
 
-🎉 GUIs like [Goneovim](https://github.com/akiyosi/goneovim) and [Uivonim](https://github.com/smolck/uivonim) implement the correct positioning behaviour and will behave as intended.
-
-#### ⚠️ UPDATE
-The issue is fixed in Neovim v0.6.0-dev (master) and is set for the milestone `0.5.1` at the time of writing.
-https://github.com/neovim/neovim/pull/14770
+There is a bug in [Neovim `0.5`](https://github.com/neovim/neovim/issues/14735) that prevents the correct positioning of more than one preview window.
 
 ### 📦 Installation
 Packer.nvim
