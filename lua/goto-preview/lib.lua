@@ -55,7 +55,7 @@ local open_floating_win = function(target, position)
     relative='win',
     width=M.conf.width,
     height=M.conf.height,
-    border={"↖", "─" ,"┐", "│", "┘", "─", "└", "│"},
+    border=M.conf.border,
     bufpos=bufpos,
     win=vim.api.nvim_get_current_win()
   })
