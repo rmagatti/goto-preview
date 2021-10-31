@@ -65,6 +65,16 @@ end
 
 M.windows = {}
 
+M.setup_aucmds = function()
+  vim.cmd[[
+    augroup goto-preview
+      au!
+      au WinClosed * lua require('goto-preview').remove_curr_win()
+      au BufEnter * lua require('goto-preview').buffer_entered()
+    augroup end
+  ]]
+end
+
 local open_floating_win = function(target, position)
   local buffer = type(target) == 'string' and vim.uri_to_bufnr(target) or target
   local bufpos = { vim.fn.line(".")-1, vim.fn.col(".") } -- FOR relative='win'
@@ -94,18 +104,23 @@ local open_floating_win = function(target, position)
     windows = M.windows
   }))
 
-  vim.cmd[[
-    augroup close_float
-      au!
-      au WinClosed * lua require('goto-preview').remove_curr_win()
-    augroup end
-  ]]
-
   run_hook_function(buffer, new_window)
 
   vim.api.nvim_win_set_cursor(new_window, position)
 end
 M.open_floating_win = open_floating_win
+
+M.buffer_entered =  function()
+  local curr_buf = vim.api.nvim_get_current_buf()
+  local curr_win = vim.api.nvim_get_current_win()
+
+  local success, result = pcall(vim.api.nvim_win_get_var, curr_win, 'is-goto-preview-window')
+
+  if success and result == 1 then
+    logger.debug('buffer_entered was called and will run hook function')
+    run_hook_function(curr_buf, curr_win)
+  end
+end
 
 local function open_references_previewer(prompt_title, items)
   if has_telescope then
