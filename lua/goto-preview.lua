@@ -67,10 +67,13 @@ end
 M.close_all_win = function()
   local windows = vim.api.nvim_tabpage_list_wins(0)
   for _, win in pairs(windows) do
+    local index = lib.tablefind(lib.windows, win)
+    table.remove(lib.windows, index)
     pcall(close_if_is_goto_preview, win)
   end
 end
 
+M.remove_curr_win = lib.remove_curr_win
 M.goto_preview_definition = M.lsp_request_definition
 M.goto_preview_implementation = M.lsp_request_implementation
 M.goto_preview_references = M.lsp_request_references
