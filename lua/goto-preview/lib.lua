@@ -48,17 +48,38 @@ local run_hook_function = function(buffer, new_window)
   logger.debug("post_open_hook call success:", success, result)
 end
 
+function M.tablefind(tab,el)
+  for index, value in pairs(tab) do
+    if value == el then
+      return index
+    end
+  end
+end
+
+M.remove_curr_win = function()
+  local index = M.tablefind(M.windows, vim.api.nvim_get_current_win())
+  if index then
+    table.remove(M.windows, index)
+  end
+end
+
+M.windows = {}
+
 local open_floating_win = function(target, position)
   local buffer = type(target) == 'string' and vim.uri_to_bufnr(target) or target
   local bufpos = { vim.fn.line(".")-1, vim.fn.col(".") } -- FOR relative='win'
+  local zindex = vim.tbl_isempty(M.windows) and 1 or #M.windows+1
   local new_window = vim.api.nvim_open_win(buffer, true, {
     relative='win',
     width=M.conf.width,
     height=M.conf.height,
     border=M.conf.border,
     bufpos=bufpos,
+    zindex=zindex,
     win=vim.api.nvim_get_current_win()
   })
+
+  table.insert(M.windows, new_window)
 
   if M.conf.opacity then vim.api.nvim_win_set_option(new_window, "winblend", M.conf.opacity) end
   vim.api.nvim_buf_set_option(buffer, 'bufhidden', 'wipe')
@@ -69,8 +90,16 @@ local open_floating_win = function(target, position)
     new_window = new_window,
     bufpos = bufpos,
     get_config = vim.api.nvim_win_get_config(new_window),
-    get_current_line = vim.api.nvim_get_current_line()
+    get_current_line = vim.api.nvim_get_current_line(),
+    windows = M.windows
   }))
+
+  vim.cmd[[
+    augroup close_float
+      au!
+      au WinClosed * lua require('goto-preview').remove_curr_win()
+    augroup end
+  ]]
 
   run_hook_function(buffer, new_window)
 
