@@ -28,6 +28,7 @@ M.setup = function(conf)
   M.conf = vim.tbl_deep_extend('force', M.conf, conf)
   lib.logger.debug('non-lib:', vim.inspect(M.conf))
   lib.setup_lib(M.conf)
+  lib.setup_aucmds()
 
   if M.conf.default_mappings then M.apply_default_mappings() end
   if M.conf.resizing_mappings then M.apply_resizing_mappings() end
@@ -74,6 +75,7 @@ M.close_all_win = function()
 end
 
 M.remove_curr_win = lib.remove_curr_win
+M.buffer_entered = lib.buffer_entered
 M.goto_preview_definition = M.lsp_request_definition
 M.goto_preview_implementation = M.lsp_request_implementation
 M.goto_preview_references = M.lsp_request_references
