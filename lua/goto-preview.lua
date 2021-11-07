@@ -11,6 +11,7 @@ local M = {
     opacity = nil; -- 0-100 opacity level of the floating window where 100 is fully transparent.
     lsp_configs = { -- Lsp result configs
       get_config = function(data)
+        lib.logger.debug(vim.inspect(data))
         local uri = data.targetUri or data.uri
         local range = data.targetRange or data.range
 
