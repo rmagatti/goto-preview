@@ -182,6 +182,7 @@ end
 local legacy_handler = function(lsp_call)
   return function(_, _, result)
     if lsp_call ~= nil and lsp_call == 'textDocument/references' then
+      logger.debug('raw result', vim.inspect(result))
       handle_references(result)
     else
       handle(result)
@@ -192,6 +193,7 @@ end
 local handler = function(lsp_call)
   return function(_, result, _, _)
     if lsp_call ~= nil and lsp_call == 'textDocument/references' then
+      logger.debug('raw result', vim.inspect(result))
       handle_references(result)
     else
       handle(result)
@@ -202,8 +204,10 @@ end
 M.get_handler = function(lsp_call)
   -- Only really need to check one of the handlers
   if debug.getinfo(vim.lsp.handlers['textDocument/definition']).nparams == 4 then
+    logger.debug('calling new handler')
     return handler(lsp_call)
   else
+    logger.debug('calling legacy handler')
     return legacy_handler(lsp_call)
   end
 end
