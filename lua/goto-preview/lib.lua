@@ -160,7 +160,7 @@ end
 local handle = function(result)
   if not result then return end
 
-  local data = result[1]
+  local data = result[1] or result
 
   local target = nil
   local cursor_position = {}
