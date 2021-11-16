@@ -64,6 +64,11 @@ nnoremap gpr <cmd>lua require('goto-preview').goto_preview_references()<CR>
 vim.api.nvim_set_keymap("n", "gp", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", {noremap=true})
 ```
 
+### Window manipulation
+One can manipulate floating windows with the regular Vim window moving commands. See `:h window-moving`.
+Example:
+<img src="https://user-images.githubusercontent.com/2881382/121652080-88716e00-ca58-11eb-811c-677ec61d8e25.gif" />
+
 ### Supported languages
 Goto Preview should work with LSP responses for most languages now! If something doesn't work as expected, drop an issue and I'll be happy to check it out!
 
