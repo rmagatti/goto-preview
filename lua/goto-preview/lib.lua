@@ -97,20 +97,21 @@ M.close_if_is_goto_preview = function(win_handle)
   end
 end
 
-M.open_floating_win = function(target, position, focus_on_open, dismiss_on_move)
+M.open_floating_win = function(target, position, opts)
   local buffer = type(target) == "string" and vim.uri_to_bufnr(target) or target
   local bufpos = { vim.fn.line(".") - 1, vim.fn.col(".") } -- FOR relative='win'
   local zindex = vim.tbl_isempty(M.windows) and 1 or #M.windows + 1
+
+  opts = opts or {}
   local enter = function()
-    if focus_on_open ~= nil then
-      return focus_on_open
+    if opts.focus_on_open ~= nil then
+      return opts.focus_on_open
     else
       return M.conf.focus_on_open
     end
   end
 
-  logger.debug("dismiss_on_move", enter())
-
+  logger.debug("focus_on_open", enter())
   local new_window = vim.api.nvim_open_win(buffer, enter(), {
     relative = "win",
     width = M.conf.width,
@@ -139,8 +140,8 @@ M.open_floating_win = function(target, position, focus_on_open, dismiss_on_move)
   }))
 
   local dismiss = function()
-    if dismiss_on_move ~= nil then
-      return dismiss_on_move
+    if opts.dismiss_on_move ~= nil then
+      return opts.dismiss_on_move
     else
       return M.conf.dismiss_on_move
     end
@@ -206,7 +207,7 @@ local function open_references_previewer(prompt_title, items)
   end
 end
 
-local handle = function(result, focus_on_open, dismiss_on_move)
+local handle = function(result, opts)
   if not result then
     return
   end
@@ -218,7 +219,8 @@ local handle = function(result, focus_on_open, dismiss_on_move)
 
   target, cursor_position = M.conf.lsp_configs.get_config(data)
 
-  M.open_floating_win(target, cursor_position, focus_on_open, dismiss_on_move)
+  -- opts: focus_on_open, dismiss_on_move, etc.
+  M.open_floating_win(target, cursor_position, opts)
 end
 
 local handle_references = function(result)
@@ -232,36 +234,36 @@ local handle_references = function(result)
   open_references_previewer("References", items)
 end
 
-local legacy_handler = function(lsp_call)
+local legacy_handler = function(lsp_call, opts)
   return function(_, _, result)
     if lsp_call ~= nil and lsp_call == "textDocument/references" then
       logger.debug("raw result", vim.inspect(result))
       handle_references(result)
     else
-      handle(result)
+      handle(result, opts)
     end
   end
 end
 
-local handler = function(lsp_call, focus_on_open, dismiss_on_move)
+local handler = function(lsp_call, opts)
   return function(_, result, _, _)
     if lsp_call ~= nil and lsp_call == "textDocument/references" then
       logger.debug("raw result", vim.inspect(result))
       handle_references(result)
     else
-      handle(result, focus_on_open, dismiss_on_move)
+      handle(result, opts)
     end
   end
 end
 
-M.get_handler = function(lsp_call, focus_on_open, dismiss_on_move)
+M.get_handler = function(lsp_call, opts)
   -- Only really need to check one of the handlers
   if debug.getinfo(vim.lsp.handlers["textDocument/definition"]).nparams == 4 then
     logger.debug("calling new handler")
-    return handler(lsp_call, focus_on_open, dismiss_on_move)
+    return handler(lsp_call, opts)
   else
     logger.debug("calling legacy handler")
-    return legacy_handler(lsp_call)
+    return legacy_handler(lsp_call, opts)
   end
 end
 
