@@ -1,69 +1,87 @@
-local lib = require('goto-preview.lib')
+local lib = require("goto-preview.lib")
 
 local M = {
   conf = {
-    width = 120; -- Width of the floating window
-    height = 15; -- Height of the floating window
-    border = {"↖", "─" ,"┐", "│", "┘", "─", "└", "│"}; -- Border characters of the floating window
-    default_mappings = false; -- Bind default mappings
-    resizing_mappings = false;
-    debug = false; -- Print debug information
-    opacity = nil; -- 0-100 opacity level of the floating window where 100 is fully transparent.
+    width = 120, -- Width of the floating window
+    height = 15, -- Height of the floating window
+    border = { "↖", "─", "┐", "│", "┘", "─", "└", "│" }, -- Border characters of the floating window
+    default_mappings = false, -- Bind default mappings
+    resizing_mappings = false, -- Binds arrow keys to resizing the floating window.
+    debug = false, -- Print debug information
+    opacity = nil, -- 0-100 opacity level of the floating window where 100 is fully transparent.
     lsp_configs = { -- Lsp result configs
       get_config = function(data)
         lib.logger.debug(vim.inspect(data))
         local uri = data.targetUri or data.uri
         local range = data.targetRange or data.range
 
-        return uri, { range.start.line +1, range.start.character }
-      end;
-    };
+        return uri, { range.start.line + 1, range.start.character }
+      end,
+    },
     post_open_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
     references = {
-      telescope = lib.has_telescope and lib.telescope.themes.get_dropdown({ hide_preview = false }) or nil
-    }
-  }
+      telescope = lib.has_telescope and lib.telescope.themes.get_dropdown({ hide_preview = false }) or nil,
+    },
+    focus_on_open = true, -- Focus the floating window when opening it.
+    dismiss_on_move = false, -- Dismiss the floating window when moving the cursor.
+  },
 }
 
 M.setup = function(conf)
-  M.conf = vim.tbl_deep_extend('force', M.conf, conf)
-  lib.logger.debug('non-lib:', vim.inspect(M.conf))
+  M.conf = vim.tbl_deep_extend("force", M.conf, conf)
+  lib.logger.debug("non-lib:", vim.inspect(M.conf))
   lib.setup_lib(M.conf)
   lib.setup_aucmds()
 
-  if M.conf.default_mappings then M.apply_default_mappings() end
-  if M.conf.resizing_mappings then M.apply_resizing_mappings() end
+  if M.conf.default_mappings then
+    M.apply_default_mappings()
+  end
+  if M.conf.resizing_mappings then
+    M.apply_resizing_mappings()
+  end
 end
 
 local function print_lsp_error(lsp_call)
-  print('goto-preview: Error calling LSP' + lsp_call + '. The current language lsp might not support it.')
+  print("goto-preview: Error calling LSP" + lsp_call + ". The current language lsp might not support it.")
 end
 
-M.lsp_request_definition = function()
+M.lsp_request_definition = function(focus_on_open, dismiss_on_move)
   local params = vim.lsp.util.make_position_params()
   local lsp_call = "textDocument/definition"
-  local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler())
-  if not success then print_lsp_error(lsp_call) end
+  local success, _ = pcall(
+    vim.lsp.buf_request,
+    0,
+    lsp_call,
+    params,
+    lib.get_handler(lsp_call, focus_on_open, dismiss_on_move)
+  )
+  if not success then
+    print_lsp_error(lsp_call)
+  end
 end
 
-M.lsp_request_implementation = function()
+M.lsp_request_implementation = function(focus_on_open, dismiss_on_move)
   local params = vim.lsp.util.make_position_params()
   local lsp_call = "textDocument/implementation"
-  local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler())
-  if not success then print_lsp_error(lsp_call) end
+  local success, _ = pcall(
+    vim.lsp.buf_request,
+    0,
+    lsp_call,
+    params,
+    lib.get_handler(lsp_call, focus_on_open, dismiss_on_move)
+  )
+  if not success then
+    print_lsp_error(lsp_call)
+  end
 end
 
 M.lsp_request_references = function()
   local params = vim.lsp.util.make_position_params()
   local lsp_call = "textDocument/references"
   local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler(lsp_call))
-  if not success then print_lsp_error(lsp_call) end
-end
-
-local close_if_is_goto_preview = function(win_handle)
-    if vim.api.nvim_win_get_var(win_handle, 'is-goto-preview-window') == 1 then
-      vim.api.nvim_win_close(win_handle, true)
-    end
+  if not success then
+    print_lsp_error(lsp_call)
+  end
 end
 
 M.close_all_win = function()
@@ -71,12 +89,13 @@ M.close_all_win = function()
   for _, win in pairs(windows) do
     local index = lib.tablefind(lib.windows, win)
     table.remove(lib.windows, index)
-    pcall(close_if_is_goto_preview, win)
+    pcall(lib.close_if_is_goto_preview, win)
   end
 end
 
-M.remove_curr_win = lib.remove_curr_win
+M.remove_win = lib.remove_win
 M.buffer_entered = lib.buffer_entered
+M.dismiss_preview = lib.dismiss_preview
 M.goto_preview_definition = M.lsp_request_definition
 M.goto_preview_implementation = M.lsp_request_implementation
 M.goto_preview_references = M.lsp_request_references
@@ -84,23 +103,37 @@ M.goto_preview_references = M.lsp_request_references
 
 M.apply_default_mappings = function()
   if M.conf.default_mappings then
-    vim.api.nvim_set_keymap("n", "gpd", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", {noremap=true})
-    vim.api.nvim_set_keymap("n", "gpi", "<cmd>lua require('goto-preview').goto_preview_implementation()<CR>", {noremap=true})
+    vim.api.nvim_set_keymap(
+      "n",
+      "gpd",
+      "<cmd>lua require('goto-preview').goto_preview_definition()<CR>",
+      { noremap = true }
+    )
+    vim.api.nvim_set_keymap(
+      "n",
+      "gpi",
+      "<cmd>lua require('goto-preview').goto_preview_implementation()<CR>",
+      { noremap = true }
+    )
     if lib.has_telescope then
-      vim.api.nvim_set_keymap("n", "gpr", "<cmd>lua require('goto-preview').goto_preview_references()<CR>", {noremap=true})
+      vim.api.nvim_set_keymap(
+        "n",
+        "gpr",
+        "<cmd>lua require('goto-preview').goto_preview_references()<CR>",
+        { noremap = true }
+      )
     end
-    vim.api.nvim_set_keymap("n", "gP", "<cmd>lua require('goto-preview').close_all_win()<CR>", {noremap=true})
+    vim.api.nvim_set_keymap("n", "gP", "<cmd>lua require('goto-preview').close_all_win()<CR>", { noremap = true })
   end
 end
 
 M.apply_resizing_mappings = function()
   if M.conf.resizing_mappings then
-    vim.api.nvim_set_keymap('n', '<left>', '<C-w><', {noremap=true})
-    vim.api.nvim_set_keymap('n', '<right>', '<C-w>>', {noremap=true})
-    vim.api.nvim_set_keymap('n', '<up>', '<C-w>-', {noremap=true})
-    vim.api.nvim_set_keymap('n', '<down>', '<C-w>+', {noremap=true})
+    vim.api.nvim_set_keymap("n", "<left>", "<C-w><", { noremap = true })
+    vim.api.nvim_set_keymap("n", "<right>", "<C-w>>", { noremap = true })
+    vim.api.nvim_set_keymap("n", "<up>", "<C-w>-", { noremap = true })
+    vim.api.nvim_set_keymap("n", "<down>", "<C-w>+", { noremap = true })
   end
 end
 
 return M
-
