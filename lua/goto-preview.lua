@@ -21,7 +21,8 @@ local M = {
     post_open_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
     references = {
       telescope = lib.has_telescope and lib.telescope.themes.get_dropdown({ hide_preview = false }) or nil
-    }
+    };
+    focus_on_open = true; -- Focus the floating window when opening it.
   }
 }
 

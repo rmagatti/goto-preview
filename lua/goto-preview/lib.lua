@@ -106,7 +106,7 @@ local open_floating_win = function(target, position)
 
   run_hook_function(buffer, new_window)
 
-  vim.api.nvim_win_set_cursor(new_window, position)
+  if M.conf.focus_on_open then vim.api.nvim_win_set_cursor(new_window, position) end
 end
 M.open_floating_win = open_floating_win
 
