@@ -49,7 +49,8 @@ The `post_open_hook` function gets called right before setting the cursor positi
 One can use this to set custom key bindings or really anything else they want to do when a new preview window opens.
 
 ### ⌨️ Mappings
-There are no mappings by default, you can set `default_mappings = true` in the config to make use of the mappings I use or define your own.  
+There are no mappings by default, you can set `default_mappings = true` in the config to make use of the mappings I use or define your own.
+
 **Default**
 ```viml
 nnoremap gpd <cmd>lua require('goto-preview').goto_preview_definition()<CR>
@@ -78,7 +79,7 @@ Until more are added one can pass in custom responses through the `lsp_configs` 
 
 ### Tested with
 ```
-NVIM v0.5.0-dev+7d4f890aa  
-Build type: Release  
-LuaJIT 2.1.0-beta3  
+NVIM v0.5.0-dev+7d4f890aa
+Build type: Release
+LuaJIT 2.1.0-beta3
 ```

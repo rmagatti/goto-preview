@@ -45,7 +45,12 @@ local function print_lsp_error(lsp_call)
   print("goto-preview: Error calling LSP" + lsp_call + ". The current language lsp might not support it.")
 end
 
-M.lsp_request_definition = function(focus_on_open, dismiss_on_move)
+--- Preview definition.
+--- @param opts table: Custom config
+---        • focus_on_open boolean: Focus the floating window when opening it.
+---        • dismiss_on_move boolean: Dismiss the floating window when moving the cursor.
+--- @see require("goto-preview").setup()
+M.lsp_request_definition = function(opts)
   local params = vim.lsp.util.make_position_params()
   local lsp_call = "textDocument/definition"
   local success, _ = pcall(
@@ -53,14 +58,19 @@ M.lsp_request_definition = function(focus_on_open, dismiss_on_move)
     0,
     lsp_call,
     params,
-    lib.get_handler(lsp_call, focus_on_open, dismiss_on_move)
+    lib.get_handler(lsp_call, opts)
   )
   if not success then
     print_lsp_error(lsp_call)
   end
 end
 
-M.lsp_request_implementation = function(focus_on_open, dismiss_on_move)
+--- Preview implementation.
+--- @param opts table: Custom config
+---        • focus_on_open boolean: Focus the floating window when opening it.
+---        • dismiss_on_move boolean: Dismiss the floating window when moving the cursor.
+--- @see require("goto-preview").setup()
+M.lsp_request_implementation = function(opts)
   local params = vim.lsp.util.make_position_params()
   local lsp_call = "textDocument/implementation"
   local success, _ = pcall(
@@ -68,17 +78,23 @@ M.lsp_request_implementation = function(focus_on_open, dismiss_on_move)
     0,
     lsp_call,
     params,
-    lib.get_handler(lsp_call, focus_on_open, dismiss_on_move)
+    lib.get_handler(lsp_call, opts)
   )
   if not success then
     print_lsp_error(lsp_call)
   end
 end
 
-M.lsp_request_references = function()
+M.lsp_request_references = function(opts)
   local params = vim.lsp.util.make_position_params()
   local lsp_call = "textDocument/references"
-  local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler(lsp_call))
+  local success, _ = pcall(
+    vim.lsp.buf_request,
+    0,
+    lsp_call,
+    params,
+    lib.get_handler(lsp_call, opts)
+  )
   if not success then
     print_lsp_error(lsp_call)
   end
