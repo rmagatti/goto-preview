@@ -9,13 +9,13 @@ local action_state
 local themes
 
 local function init_telescope()
-  pickers = require("telescope.pickers")
-  make_entry = require("telescope.make_entry")
+  pickers = require "telescope.pickers"
+  make_entry = require "telescope.make_entry"
   telescope_conf = require("telescope.config").values
-  finders = require("telescope.finders")
-  actions = require("telescope.actions")
-  action_state = require("telescope.actions.state")
-  themes = require("telescope.themes")
+  finders = require "telescope.finders"
+  actions = require "telescope.actions"
+  action_state = require "telescope.actions.state"
+  themes = require "telescope.themes"
 end
 
 if has_telescope then
@@ -68,13 +68,13 @@ end
 M.windows = {}
 
 M.setup_aucmds = function()
-  vim.cmd([[
+  vim.cmd [[
     augroup goto-preview
       au!
       au WinClosed * lua require('goto-preview').remove_win()
       au BufEnter * lua require('goto-preview').buffer_entered()
     augroup end
-    ]])
+    ]]
 end
 
 M.dismiss_preview = function(winnr)
@@ -83,7 +83,7 @@ M.dismiss_preview = function(winnr)
     logger.debug("attempting to close ", winnr)
     pcall(vim.api.nvim_win_close, winnr, true)
   else
-    logger.debug("attempting to all preview windows")
+    logger.debug "attempting to all preview windows"
     for _, win in ipairs(M.windows) do
       M.close_if_is_goto_preview(win)
     end
@@ -93,13 +93,13 @@ end
 M.close_if_is_goto_preview = function(win_handle)
   local success, result = pcall(vim.api.nvim_win_get_var, win_handle, "is-goto-preview-window")
   if success and result == 1 then
-    vim.api.nvim_win_close(win_handle, true)
+    vim.api.nvim_win_close(win_handle, M.conf.force_close)
   end
 end
 
 M.open_floating_win = function(target, position, opts)
   local buffer = type(target) == "string" and vim.uri_to_bufnr(target) or target
-  local bufpos = { vim.fn.line(".") - 1, vim.fn.col(".") } -- FOR relative='win'
+  local bufpos = { vim.fn.line "." - 1, vim.fn.col "." } -- FOR relative='win'
   local zindex = vim.tbl_isempty(M.windows) and 1 or #M.windows + 1
 
   opts = opts or {}
@@ -127,17 +127,17 @@ M.open_floating_win = function(target, position, opts)
   if M.conf.opacity then
     vim.api.nvim_win_set_option(new_window, "winblend", M.conf.opacity)
   end
-  vim.api.nvim_buf_set_option(buffer, "bufhidden", "wipe")
+  vim.api.nvim_buf_set_option(buffer, "bufhidden", M.conf.bufhidden)
   vim.api.nvim_win_set_var(new_window, "is-goto-preview-window", 1)
 
-  logger.debug(vim.inspect({
+  logger.debug(vim.inspect {
     curr_window = vim.api.nvim_get_current_win(),
     new_window = new_window,
     bufpos = bufpos,
     get_config = vim.api.nvim_win_get_config(new_window),
     get_current_line = vim.api.nvim_get_current_line(),
     windows = M.windows,
-  }))
+  })
 
   local dismiss = function()
     if opts.dismiss_on_move ~= nil then
@@ -167,7 +167,7 @@ M.buffer_entered = function()
   local success, result = pcall(vim.api.nvim_win_get_var, curr_win, "is-goto-preview-window")
 
   if success and result == 1 then
-    logger.debug("buffer_entered was called and will run hook function")
+    logger.debug "buffer_entered was called and will run hook function"
     run_hook_function(curr_buf, curr_win)
   end
 end
@@ -184,10 +184,10 @@ local function open_references_previewer(prompt_title, items)
 
     pickers.new(opts, {
       prompt_title = prompt_title,
-      finder = finders.new_table({
+      finder = finders.new_table {
         results = items,
         entry_maker = entry_maker,
-      }),
+      },
       previewer = previewer,
       sorter = telescope_conf.generic_sorter(opts),
       attach_mappings = function(prompt_bufnr)
@@ -203,7 +203,7 @@ local function open_references_previewer(prompt_title, items)
       end,
     }):find()
   else
-    error("goto_preview_references requires Telescope.nvim")
+    error "goto_preview_references requires Telescope.nvim"
   end
 end
 
@@ -259,10 +259,10 @@ end
 M.get_handler = function(lsp_call, opts)
   -- Only really need to check one of the handlers
   if debug.getinfo(vim.lsp.handlers["textDocument/definition"]).nparams == 4 then
-    logger.debug("calling new handler")
+    logger.debug "calling new handler"
     return handler(lsp_call, opts)
   else
-    logger.debug("calling legacy handler")
+    logger.debug "calling legacy handler"
     return legacy_handler(lsp_call, opts)
   end
 end
