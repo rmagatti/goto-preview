@@ -43,6 +43,7 @@ require('goto-preview').setup {
   focus_on_open = true; -- Focus the floating window when opening it.
   dismiss_on_move = false; -- Dismiss the floating window when moving the cursor.
   force_close = true, -- passed into vim.api.nvim_win_close's second argument. See :h nvim_win_close
+  bufhidden = "wipe", -- the bufhidden option to set on the floating window. See :h bufhidden
 }
 ```
 

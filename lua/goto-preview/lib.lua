@@ -127,7 +127,7 @@ M.open_floating_win = function(target, position, opts)
   if M.conf.opacity then
     vim.api.nvim_win_set_option(new_window, "winblend", M.conf.opacity)
   end
-  vim.api.nvim_buf_set_option(buffer, "bufhidden", "wipe")
+  vim.api.nvim_buf_set_option(buffer, "bufhidden", M.conf.bufhidden)
   vim.api.nvim_win_set_var(new_window, "is-goto-preview-window", 1)
 
   logger.debug(vim.inspect {
