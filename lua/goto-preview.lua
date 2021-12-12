@@ -77,6 +77,15 @@ end
 
 M.lsp_request_references = function(opts)
   local params = vim.lsp.util.make_position_params()
+
+  lib.logger.debug("params pre manipulation", vim.inspect(params))
+  if not params.context then
+    params.context = {
+      includeDeclaration = true,
+    }
+  end
+  lib.logger.debug("params post manipulation", vim.inspect(params))
+
   local lsp_call = "textDocument/references"
   local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler(lsp_call, opts))
   if not success then
