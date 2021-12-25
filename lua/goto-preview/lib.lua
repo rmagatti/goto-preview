@@ -217,6 +217,11 @@ local handle = function(result, opts)
   local target = nil
   local cursor_position = {}
 
+  if vim.tbl_isempty(data) then
+    logger.debug "The LSP returned no results. No preview to display."
+    return
+  end
+
   target, cursor_position = M.conf.lsp_configs.get_config(data)
 
   -- opts: focus_on_open, dismiss_on_move, etc.
