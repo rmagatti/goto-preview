@@ -234,7 +234,7 @@ local handle_references = function(result)
   end
   local items = {}
 
-  vim.list_extend(items, vim.lsp.util.locations_to_items(result) or {})
+  vim.list_extend(items, vim.lsp.util.locations_to_items(result, "utf-8") or {})
 
   open_references_previewer("References", items)
 end
