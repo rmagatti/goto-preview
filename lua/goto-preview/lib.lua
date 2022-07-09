@@ -115,19 +115,21 @@ M.open_floating_win = function(target, position, opts)
     end
   end
 
-  local nest_floating = function()
-    if opts.nest_floating ~= nil then
-      return opts.nest_floating
+  local stack_floating_preview_windows = function()
+    if opts.stack_floating_preview_windows ~= nil then
+      return opts.stack_floating_preview_windows
     else
-      return M.conf.nest_floating
+      return M.conf.stack_floating_preview_windows
     end
   end
 
   logger.debug("focus_on_open", enter())
-  logger.debug("nest_floating", nest_floating())
-  local curr_win = vim.api.nvim_get_current_win()
+  logger.debug("stack_floating_preview_windows", stack_floating_preview_windows())
+
   local preview_window = {}
-  if not nest_floating() and is_floating(curr_win) then
+  local curr_win = vim.api.nvim_get_current_win()
+  local success, result = pcall(vim.api.nvim_win_get_var, curr_win, "is-goto-preview-window")
+  if not stack_floating_preview_windows() and is_floating(curr_win) and success and result == 1 then
     preview_window = curr_win
     vim.api.nvim_win_set_config(preview_window, {
       width = M.conf.width,
