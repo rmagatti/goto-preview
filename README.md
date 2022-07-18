@@ -1,5 +1,5 @@
 ## ⭐ Goto Preview
-A small Neovim plugin for previewing native LSP's goto definition calls in floating windows.
+A small Neovim plugin for previewing native LSP's goto definition, type definition, implementation, and references calls in floating windows.
 
 ### 🚀 Showcase
 <img src="https://github.com/rmagatti/readme-assets/blob/main/goto-preview-zoomed.gif" />
@@ -63,6 +63,7 @@ There are no mappings by default, you can set `default_mappings = true` in the c
 **Default**
 ```viml
 nnoremap gpd <cmd>lua require('goto-preview').goto_preview_definition()<CR>
+nnoremap gpt <cmd>lua require('goto-preview').goto_preview_type_definition()<CR>
 nnoremap gpi <cmd>lua require('goto-preview').goto_preview_implementation()<CR>
 nnoremap gP <cmd>lua require('goto-preview').close_all_win()<CR>
 " Only set if you have telescope installed
@@ -82,7 +83,7 @@ Example:
 ### Supported languages
 Goto Preview should work with LSP responses for most languages now! If something doesn't work as expected, drop an issue and I'll be happy to check it out!
 
-**Note:** different language servers have potentially different shapes for the result of the `textDocument/definition` and `textDocument/implementation` calls.
+**Note:** different language servers have potentially different shapes for the result of the `textDocument/definition`, `textDocument/typeDefinition` and `textDocument/implementation` calls.
 Until more are added one can pass in custom responses through the `lsp_configs` config value. Just follow the same pattern returning two values, a `target (string)` and a `cursor_position ({line_num, col_num})`. The `data` parameter is the `[1]` of the LSP's `result` of the definition/implementation calls and is what gets passed into the custom `get_config` function.
 
 

@@ -63,6 +63,20 @@ M.lsp_request_definition = function(opts)
   end
 end
 
+--- Preview type definition.
+--- @param opts table: Custom config
+---        • focus_on_open boolean: Focus the floating window when opening it.
+---        • dismiss_on_move boolean: Dismiss the floating window when moving the cursor.
+--- @see require("goto-preview").setup()
+M.lsp_request_type_definition = function(opts)
+  local params = vim.lsp.util.make_position_params()
+  local lsp_call = "textDocument/typeDefinition"
+  local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler(lsp_call, opts))
+  if not success then
+    print_lsp_error(lsp_call)
+  end
+end
+
 --- Preview implementation.
 --- @param opts table: Custom config
 ---        • focus_on_open boolean: Focus the floating window when opening it.
@@ -108,6 +122,7 @@ M.remove_win = lib.remove_win
 M.buffer_entered = lib.buffer_entered
 M.dismiss_preview = lib.dismiss_preview
 M.goto_preview_definition = M.lsp_request_definition
+M.goto_preview_type_definition = M.lsp_request_type_definition
 M.goto_preview_implementation = M.lsp_request_implementation
 M.goto_preview_references = M.lsp_request_references
 -- Mappings
@@ -118,6 +133,12 @@ M.apply_default_mappings = function()
       "n",
       "gpd",
       "<cmd>lua require('goto-preview').goto_preview_definition()<CR>",
+      { noremap = true }
+    )
+    vim.api.nvim_set_keymap(
+      "n",
+      "gpt",
+      "<cmd>lua require('goto-preview').goto_preview_type_implementation()<CR>",
       { noremap = true }
     )
     vim.api.nvim_set_keymap(
