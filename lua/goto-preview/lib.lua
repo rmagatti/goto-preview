@@ -35,6 +35,10 @@ M.setup_lib = function(conf)
   M.logger.debug("lib:", vim.inspect(M.conf))
 end
 
+local function is_floating(window_id)
+  return vim.api.nvim_win_get_config(window_id).relative ~= ''
+end
+
 local logger = {
   debug = function(...)
     if M.conf.debug then
@@ -111,32 +115,55 @@ M.open_floating_win = function(target, position, opts)
     end
   end
 
-  logger.debug("focus_on_open", enter())
-  local new_window = vim.api.nvim_open_win(buffer, enter(), {
-    relative = "win",
-    width = M.conf.width,
-    height = M.conf.height,
-    border = M.conf.border,
-    bufpos = bufpos,
-    zindex = zindex,
-    win = vim.api.nvim_get_current_win(),
-  })
+  local stack_floating_preview_windows = function()
+    if opts.stack_floating_preview_windows ~= nil then
+      return opts.stack_floating_preview_windows
+    else
+      return M.conf.stack_floating_preview_windows
+    end
+  end
 
-  table.insert(M.windows, new_window)
+  logger.debug("focus_on_open", enter())
+  logger.debug("stack_floating_preview_windows", stack_floating_preview_windows())
+
+  local preview_window = {}
+  local curr_win = vim.api.nvim_get_current_win()
+  local success, result = pcall(vim.api.nvim_win_get_var, curr_win, "is-goto-preview-window")
+  if not stack_floating_preview_windows() and is_floating(curr_win) and success and result == 1 then
+    preview_window = curr_win
+    vim.api.nvim_win_set_config(preview_window, {
+      width = M.conf.width,
+      height = M.conf.height,
+      border = M.conf.border,
+    })
+    vim.api.nvim_win_set_buf(preview_window, buffer)
+  else
+    preview_window = vim.api.nvim_open_win(buffer, enter(), {
+      relative = "win",
+      width = M.conf.width,
+      height = M.conf.height,
+      border = M.conf.border,
+      bufpos = bufpos,
+      zindex = zindex,
+      win = vim.api.nvim_get_current_win(),
+    })
+
+    table.insert(M.windows, preview_window)
+  end
 
   if M.conf.opacity then
-    vim.api.nvim_win_set_option(new_window, "winblend", M.conf.opacity)
+    vim.api.nvim_win_set_option(preview_window, "winblend", M.conf.opacity)
   end
   if vim.api.nvim_get_current_buf() ~= buffer then
     vim.api.nvim_buf_set_option(buffer, "bufhidden", M.conf.bufhidden)
   end
-  vim.api.nvim_win_set_var(new_window, "is-goto-preview-window", 1)
+  vim.api.nvim_win_set_var(preview_window, "is-goto-preview-window", 1)
 
   logger.debug(vim.inspect {
     curr_window = vim.api.nvim_get_current_win(),
-    new_window = new_window,
+    preview_window = preview_window,
     bufpos = bufpos,
-    get_config = vim.api.nvim_win_get_config(new_window),
+    get_config = vim.api.nvim_win_get_config(preview_window),
     get_current_line = vim.api.nvim_get_current_line(),
     windows = M.windows,
   })
@@ -152,14 +179,14 @@ M.open_floating_win = function(target, position, opts)
   logger.debug("dismiss_on_move", dismiss())
   if dismiss() then
     vim.api.nvim_command(
-      string.format("autocmd CursorMoved <buffer> ++once lua require('goto-preview').dismiss_preview(%d)", new_window)
+      string.format("autocmd CursorMoved <buffer> ++once lua require('goto-preview').dismiss_preview(%d)", preview_window)
     )
   end
 
   -- Set position of the preview buffer equal to the target position so that correct preview position shows
-  vim.api.nvim_win_set_cursor(new_window, position)
+  vim.api.nvim_win_set_cursor(preview_window, position)
 
-  run_hook_function(buffer, new_window)
+  run_hook_function(buffer, preview_window)
 end
 
 M.buffer_entered = function()
