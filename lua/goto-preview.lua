@@ -138,7 +138,7 @@ M.apply_default_mappings = function()
     vim.api.nvim_set_keymap(
       "n",
       "gpt",
-      "<cmd>lua require('goto-preview').goto_preview_type_implementation()<CR>",
+      "<cmd>lua require('goto-preview').goto_preview_type_definition()<CR>",
       { noremap = true }
     )
     vim.api.nvim_set_keymap(
