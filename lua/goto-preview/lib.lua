@@ -201,6 +201,10 @@ M.buffer_entered = function()
   end
 end
 
+local function _open_references_window(val)
+  M.open_floating_win(vim.uri_from_fname(val.filename), { val.lnum, val.col })
+end
+
 local function open_references_previewer(prompt_title, items)
   if has_telescope then
     local opts = M.conf.references.telescope
@@ -211,26 +215,29 @@ local function open_references_previewer(prompt_title, items)
       previewer = telescope_conf.qflist_previewer(opts)
     end
 
-    pickers.new(opts, {
-      prompt_title = prompt_title,
-      finder = finders.new_table {
-        results = items,
-        entry_maker = entry_maker,
-      },
-      previewer = previewer,
-      sorter = telescope_conf.generic_sorter(opts),
-      attach_mappings = function(prompt_bufnr)
-        actions.select_default:replace(function()
-          local selection = action_state.get_selected_entry()
-          actions.close(prompt_bufnr)
+    if #items == 1 then
+      _open_references_window(items[1])
+    else
+      pickers.new(opts, {
+        prompt_title = prompt_title,
+        finder = finders.new_table {
+          results = items,
+          entry_maker = entry_maker,
+        },
+        previewer = previewer,
+        sorter = telescope_conf.generic_sorter(opts),
+        attach_mappings = function(prompt_bufnr)
+          actions.select_default:replace(function()
+            local selection = action_state.get_selected_entry()
+            actions.close(prompt_bufnr)
 
-          local val = selection.value
-          M.open_floating_win(vim.uri_from_fname(val.filename), { val.lnum, val.col })
-        end)
+            _open_references_window(selection.value)
+          end)
 
-        return true
-      end,
-    }):find()
+          return true
+        end,
+      }):find()
+    end
   else
     error "goto_preview_references requires Telescope.nvim"
   end
