@@ -21,7 +21,7 @@ local M = {
     },
     post_open_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
     references = {
-      telescope = lib.has_telescope and lib.telescope.themes.get_dropdown { hide_preview = false } or nil,
+      telescope = nil,
     },
     focus_on_open = true, -- Focus the floating window when opening it.
     dismiss_on_move = false, -- Dismiss the floating window when moving the cursor.
@@ -130,42 +130,20 @@ M.goto_preview_references = M.lsp_request_references
 
 M.apply_default_mappings = function()
   if M.conf.default_mappings then
-    vim.api.nvim_set_keymap(
-      "n",
-      "gpd",
-      "<cmd>lua require('goto-preview').goto_preview_definition()<CR>",
-      { noremap = true }
-    )
-    vim.api.nvim_set_keymap(
-      "n",
-      "gpt",
-      "<cmd>lua require('goto-preview').goto_preview_type_definition()<CR>",
-      { noremap = true }
-    )
-    vim.api.nvim_set_keymap(
-      "n",
-      "gpi",
-      "<cmd>lua require('goto-preview').goto_preview_implementation()<CR>",
-      { noremap = true }
-    )
-    if lib.has_telescope then
-      vim.api.nvim_set_keymap(
-        "n",
-        "gpr",
-        "<cmd>lua require('goto-preview').goto_preview_references()<CR>",
-        { noremap = true }
-      )
-    end
-    vim.api.nvim_set_keymap("n", "gP", "<cmd>lua require('goto-preview').close_all_win()<CR>", { noremap = true })
+    vim.keymap.set("n", "gpd", require("goto-preview").goto_preview_definition)
+    vim.keymap.set("n", "gpt", require("goto-preview").goto_preview_type_definition)
+    vim.keymap.set("n", "gpi", require("goto-preview").goto_preview_implementation)
+    vim.keymap.set("n", "gpr", require("goto-preview").goto_preview_references)
+    vim.keymap.set("n", "gP", require("goto-preview").close_all_win)
   end
 end
 
 M.apply_resizing_mappings = function()
   if M.conf.resizing_mappings then
-    vim.api.nvim_set_keymap("n", "<left>", "<C-w><", { noremap = true })
-    vim.api.nvim_set_keymap("n", "<right>", "<C-w>>", { noremap = true })
-    vim.api.nvim_set_keymap("n", "<up>", "<C-w>-", { noremap = true })
-    vim.api.nvim_set_keymap("n", "<down>", "<C-w>+", { noremap = true })
+    vim.keymap.set("n", "<left>", "<C-w><", { noremap = true })
+    vim.keymap.set("n", "<right>", "<C-w>>", { noremap = true })
+    vim.keymap.set("n", "<up>", "<C-w>-", { noremap = true })
+    vim.keymap.set("n", "<down>", "<C-w>+", { noremap = true })
   end
 end
 
