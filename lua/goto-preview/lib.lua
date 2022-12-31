@@ -1,33 +1,5 @@
-local has_telescope = pcall(require, "telescope")
-
-local pickers
-local make_entry
-local telescope_conf
-local finders
-local actions
-local action_state
-local themes
-
-local function init_telescope()
-  pickers = require "telescope.pickers"
-  make_entry = require "telescope.make_entry"
-  telescope_conf = require("telescope.config").values
-  finders = require "telescope.finders"
-  actions = require "telescope.actions"
-  action_state = require "telescope.actions.state"
-  themes = require "telescope.themes"
-end
-
-if has_telescope then
-  init_telescope()
-end
-
 local M = {
   conf = {},
-  has_telescope = has_telescope,
-  telescope = has_telescope and {
-    themes = themes,
-  } or nil,
 }
 
 M.setup_lib = function(conf)
@@ -36,7 +8,7 @@ M.setup_lib = function(conf)
 end
 
 local function is_floating(window_id)
-  return vim.api.nvim_win_get_config(window_id).relative ~= ''
+  return vim.api.nvim_win_get_config(window_id).relative ~= ""
 end
 
 local logger = {
@@ -126,7 +98,7 @@ M.open_floating_win = function(target, position, opts)
   logger.debug("focus_on_open", enter())
   logger.debug("stack_floating_preview_windows", stack_floating_preview_windows())
 
-  local preview_window = {}
+  local preview_window
   local curr_win = vim.api.nvim_get_current_win()
   local success, result = pcall(vim.api.nvim_win_get_var, curr_win, "is-goto-preview-window")
   if not stack_floating_preview_windows() and is_floating(curr_win) and success and result == 1 then
@@ -179,7 +151,10 @@ M.open_floating_win = function(target, position, opts)
   logger.debug("dismiss_on_move", dismiss())
   if dismiss() then
     vim.api.nvim_command(
-      string.format("autocmd CursorMoved <buffer> ++once lua require('goto-preview').dismiss_preview(%d)", preview_window)
+      string.format(
+        "autocmd CursorMoved <buffer> ++once lua require('goto-preview').dismiss_preview(%d)",
+        preview_window
+      )
     )
   end
 
@@ -206,8 +181,18 @@ local function _open_references_window(val)
 end
 
 local function open_references_previewer(prompt_title, items)
+  local has_telescope, _ = pcall(require, "telescope")
+
   if has_telescope then
-    local opts = M.conf.references.telescope
+    local pickers = require "telescope.pickers"
+    local make_entry = require "telescope.make_entry"
+    local telescope_conf = require("telescope.config").values
+    local finders = require "telescope.finders"
+    local actions = require "telescope.actions"
+    local action_state = require "telescope.actions.state"
+    local themes = require "telescope.themes"
+
+    local opts = M.conf.references.telescope or themes.get_dropdown { hide_preview = false }
     local entry_maker = make_entry.gen_from_quickfix(opts)
     local previewer = nil
 
