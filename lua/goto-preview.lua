@@ -130,11 +130,11 @@ M.goto_preview_references = M.lsp_request_references
 
 M.apply_default_mappings = function()
   if M.conf.default_mappings then
-    vim.keymap.set("n", "gpd", require("goto-preview").goto_preview_definition)
-    vim.keymap.set("n", "gpt", require("goto-preview").goto_preview_type_definition)
-    vim.keymap.set("n", "gpi", require("goto-preview").goto_preview_implementation)
-    vim.keymap.set("n", "gpr", require("goto-preview").goto_preview_references)
-    vim.keymap.set("n", "gP", require("goto-preview").close_all_win)
+    vim.keymap.set("n", "gpd", require("goto-preview").goto_preview_definition, { desc = "Preview definition" })
+    vim.keymap.set("n", "gpt", require("goto-preview").goto_preview_type_definition, { desc = "Preview type definition" })
+    vim.keymap.set("n", "gpi", require("goto-preview").goto_preview_implementation, { desc = "Preview implementation" })
+    vim.keymap.set("n", "gpr", require("goto-preview").goto_preview_references, { desc = "Preview references" })
+    vim.keymap.set("n", "gP", require("goto-preview").close_all_win, { desc = "Close preview windows" })
   end
 end
 
