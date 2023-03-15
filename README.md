@@ -74,6 +74,15 @@ nnoremap gpr <cmd>lua require('goto-preview').goto_preview_references()<CR>
 vim.keymap.set("n", "gp", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", {noremap=true})
 ```
 
+### 📚 Custom Options
+
+The `close_all_win` function takes an optional table as an argument.
+
+Example usage:
+```lua
+require("goto-preview").close_all_win { skip_curr_window = true }
+```
+
 ### Window manipulation
 One can manipulate floating windows with the regular Vim window moving commands. See `:h window-moving`.
 Example:
