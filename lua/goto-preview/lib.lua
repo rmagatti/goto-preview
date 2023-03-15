@@ -50,7 +50,7 @@ M.setup_aucmds = function()
       au WinClosed * lua require('goto-preview').remove_win()
       au BufEnter * lua require('goto-preview').buffer_entered()
     augroup end
-    ]]
+  ]]
 end
 
 M.dismiss_preview = function(winnr)
