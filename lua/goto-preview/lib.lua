@@ -73,6 +73,22 @@ M.close_if_is_goto_preview = function(win_handle)
   end
 end
 
+local function set_title(buffer)
+  if vim.fn.has "0.9" == 0 then
+    return nil
+  end
+
+  local rel_filepath = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ":.")
+  return M.conf.preview_window_title.enable and rel_filepath or nil
+end
+
+local function set_title_pos()
+  if vim.fn.has "0.9" == 0 then
+    return nil
+  end
+  return M.conf.preview_window_title.enable and M.conf.preview_window_title.position or nil
+end
+
 M.open_floating_win = function(target, position, opts)
   local buffer = type(target) == "string" and vim.uri_to_bufnr(target) or target
   local bufpos = { vim.fn.line "." - 1, vim.fn.col "." } -- FOR relative='win'
@@ -110,8 +126,6 @@ M.open_floating_win = function(target, position, opts)
     })
     vim.api.nvim_win_set_buf(preview_window, buffer)
   else
-    local rel_filepath = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buffer), ":.")
-
     preview_window = vim.api.nvim_open_win(buffer, enter(), {
       relative = "win",
       width = M.conf.width,
@@ -120,8 +134,8 @@ M.open_floating_win = function(target, position, opts)
       bufpos = bufpos,
       zindex = zindex,
       win = vim.api.nvim_get_current_win(),
-      title = M.conf.preview_window_title.enable and rel_filepath or nil,
-      title_pos = M.conf.preview_window_title.enable and M.conf.preview_window_title.position or nil,
+      title = set_title(buffer),
+      title_pos = set_title_pos(),
     })
 
     table.insert(M.windows, preview_window)
