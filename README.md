@@ -51,6 +51,8 @@ require('goto-preview').setup {
   dismiss_on_move = false; -- Dismiss the floating window when moving the cursor.
   force_close = true, -- passed into vim.api.nvim_win_close's second argument. See :h nvim_win_close
   bufhidden = "wipe", -- the bufhidden option to set on the floating window. See :h bufhidden
+  stack_floating_preview_windows = true, -- Whether to nest floating windows
+  preview_window_title = { enable = true, position = "left" }, -- Whether to set the preview window title as the filename
 }
 ```
 
