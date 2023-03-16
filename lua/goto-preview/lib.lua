@@ -74,7 +74,8 @@ M.close_if_is_goto_preview = function(win_handle)
 end
 
 local function set_title(buffer)
-  if vim.fn.has "0.9" == 0 then
+  if vim.fn.has "nvim-0.9.0" == 0 then
+    logger.debug "title not supported in this version of neovim"
     return nil
   end
 
@@ -83,9 +84,11 @@ local function set_title(buffer)
 end
 
 local function set_title_pos()
-  if vim.fn.has "0.9" == 0 then
+  if vim.fn.has "nvim-0.9.0" == 0 then
+    logger.debug "title_pos not supported in this version of neovim"
     return nil
   end
+
   return M.conf.preview_window_title.enable and M.conf.preview_window_title.position or nil
 end
 
