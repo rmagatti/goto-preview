@@ -21,6 +21,7 @@ local M = {
       end,
     },
     post_open_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
+    post_close_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
     references = {
       telescope = nil,
     },
@@ -131,6 +132,7 @@ end
 
 M.remove_win = lib.remove_win
 M.buffer_entered = lib.buffer_entered
+M.buffer_left = lib.buffer_left
 M.dismiss_preview = lib.dismiss_preview
 M.goto_preview_definition = M.lsp_request_definition
 M.goto_preview_type_definition = M.lsp_request_type_definition
