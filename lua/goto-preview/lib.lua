@@ -21,9 +21,14 @@ local logger = {
 
 M.logger = logger
 
-local run_hook_function = function(buffer, new_window)
+local run_post_open_hook_function = function(buffer, new_window)
   local success, result = pcall(M.conf.post_open_hook, buffer, new_window)
   logger.debug("post_open_hook call success:", success, result)
+end
+
+local run_post_close_hook_function = function(buffer, new_window)
+  local success, result = pcall(M.conf.post_close_hook, buffer, new_window)
+  logger.debug("post_close_hook call success:", success, result)
 end
 
 function M.tablefind(tab, el)
@@ -49,6 +54,7 @@ M.setup_aucmds = function()
       au!
       au WinClosed * lua require('goto-preview').remove_win()
       au BufEnter * lua require('goto-preview').buffer_entered()
+      au BufLeave * lua require('goto-preview').buffer_left()
     augroup end
   ]]
 end
@@ -67,8 +73,13 @@ M.dismiss_preview = function(winnr)
 end
 
 M.close_if_is_goto_preview = function(win_handle)
+  local curr_buf = vim.api.nvim_get_current_buf()
+  local curr_win = vim.api.nvim_get_current_win()
+
   local success, result = pcall(vim.api.nvim_win_get_var, win_handle, "is-goto-preview-window")
   if success and result == 1 then
+
+    run_post_close_hook_function(curr_buf, curr_win)
     vim.api.nvim_win_close(win_handle, M.conf.force_close)
   end
 end
@@ -182,7 +193,7 @@ M.open_floating_win = function(target, position, opts)
   -- Set position of the preview buffer equal to the target position so that correct preview position shows
   vim.api.nvim_win_set_cursor(preview_window, position)
 
-  run_hook_function(buffer, preview_window)
+  run_post_open_hook_function(buffer, preview_window)
 end
 
 M.buffer_entered = function()
@@ -193,7 +204,19 @@ M.buffer_entered = function()
 
   if success and result == 1 then
     logger.debug "buffer_entered was called and will run hook function"
-    run_hook_function(curr_buf, curr_win)
+    run_post_open_hook_function(curr_buf, curr_win)
+  end
+end
+
+M.buffer_left = function()
+  local curr_buf = vim.api.nvim_get_current_buf()
+  local curr_win = vim.api.nvim_get_current_win()
+
+  local success, result = pcall(vim.api.nvim_win_get_var, curr_win, "is-goto-preview-window")
+
+  if success and result == 1 then
+    logger.debug "buffer_left was called and will run hook function"
+    run_post_close_hook_function(curr_buf, curr_win)
   end
 end
 
