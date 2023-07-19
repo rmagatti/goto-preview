@@ -40,6 +40,15 @@ function M.tablefind(tab, el)
 end
 
 M.remove_win = function(win)
+  local curr_buf = vim.api.nvim_get_current_buf()
+  local curr_win = vim.api.nvim_get_current_win()
+
+  local success, result = pcall(vim.api.nvim_win_get_var, curr_win, "is-goto-preview-window")
+
+  if success and result == 1 then
+    run_post_close_hook_function(curr_buf, curr_win)
+  end
+
   local index = M.tablefind(M.windows, win or vim.api.nvim_get_current_win())
   if index then
     table.remove(M.windows, index)
