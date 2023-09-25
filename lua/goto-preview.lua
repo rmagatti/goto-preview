@@ -95,6 +95,20 @@ M.lsp_request_implementation = function(opts)
   end
 end
 
+--- Preview declaration.
+--- @param opts table: Custom config
+---        • focus_on_open boolean: Focus the floating window when opening it.
+---        • dismiss_on_move boolean: Dismiss the floating window when moving the cursor.
+--- @see require("goto-preview").setup()
+M.lsp_request_declaration = function(opts)
+  local params = vim.lsp.util.make_position_params()
+  local lsp_call = "textDocument/declaration"
+  local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler(lsp_call, opts))
+  if not success then
+    print_lsp_error(lsp_call)
+  end
+end
+
 M.lsp_request_references = function(opts)
   local params = vim.lsp.util.make_position_params()
 
@@ -137,6 +151,7 @@ M.dismiss_preview = lib.dismiss_preview
 M.goto_preview_definition = M.lsp_request_definition
 M.goto_preview_type_definition = M.lsp_request_type_definition
 M.goto_preview_implementation = M.lsp_request_implementation
+M.goto_preview_declaration = M.lsp_request_declaration
 M.goto_preview_references = M.lsp_request_references
 -- Mappings
 
@@ -151,6 +166,9 @@ M.apply_default_mappings = function()
     )
     vim.keymap.set("n", "gpi", require("goto-preview").goto_preview_implementation, {
       desc = "Preview implementation",
+    })
+    vim.keymap.set("n", "gpD", require("goto-preview").goto_preview_declaration, {
+      desc = "Preview declaration",
     })
     vim.keymap.set("n", "gpr", require("goto-preview").goto_preview_references, { desc = "Preview references" })
     vim.keymap.set("n", "gP", require("goto-preview").close_all_win, { desc = "Close preview windows" })
