@@ -112,12 +112,7 @@ local function set_title_pos()
   return M.conf.preview_window_title.enable and M.conf.preview_window_title.position or nil
 end
 
-M.open_floating_win = function(target, position, opts)
-  local buffer = type(target) == "string" and vim.uri_to_bufnr(target) or target
-  local bufpos = { vim.fn.line "." - 1, vim.fn.col "." } -- FOR relative='win'
-  local zindex = vim.tbl_isempty(M.windows) and 1 or #M.windows + 1
-
-  opts = opts or {}
+local function create_preview_win(buffer, bufpos, zindex, opts)
   local enter = function()
     return opts.focus_on_open or M.conf.focus_on_open
   end
@@ -155,6 +150,18 @@ M.open_floating_win = function(target, position, opts)
 
     table.insert(M.windows, preview_window)
   end
+
+  return preview_window
+end
+
+M.open_floating_win = function(target, position, opts)
+  local buffer = type(target) == "string" and vim.uri_to_bufnr(target) or target
+  local bufpos = { vim.fn.line(".") - 1, vim.fn.col(".") } -- FOR relative='win'
+  local zindex = vim.tbl_isempty(M.windows) and 1 or #M.windows + 1
+
+  opts = opts or {}
+
+  local preview_window = create_preview_win(buffer, bufpos, zindex, opts)
 
   if M.conf.opacity then
     vim.api.nvim_win_set_option(preview_window, "winblend", M.conf.opacity)
