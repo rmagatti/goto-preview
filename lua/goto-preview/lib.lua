@@ -11,6 +11,10 @@ local function is_floating(window_id)
   return vim.api.nvim_win_get_config(window_id).relative ~= ""
 end
 
+local function is_curr_buf(buffer)
+  return vim.api.nvim_get_current_buf() == buffer
+end
+
 local logger = {
   debug = function(...)
     if M.conf.debug then
@@ -127,6 +131,11 @@ local function create_preview_win(buffer, bufpos, zindex, opts)
   local preview_window
   local curr_win = vim.api.nvim_get_current_win()
   local success, result = pcall(vim.api.nvim_win_get_var, curr_win, "is-goto-preview-window")
+
+  if is_curr_buf(buffer) then
+    return curr_win
+  end
+
   if not stack_floating_preview_windows() and is_floating(curr_win) and success and result == 1 then
     preview_window = curr_win
     vim.api.nvim_win_set_config(preview_window, {
@@ -165,9 +174,6 @@ M.open_floating_win = function(target, position, opts)
 
   if M.conf.opacity then
     vim.api.nvim_win_set_option(preview_window, "winblend", M.conf.opacity)
-  end
-  if vim.api.nvim_get_current_buf() ~= buffer then
-    vim.api.nvim_buf_set_option(buffer, "bufhidden", M.conf.bufhidden)
   end
   vim.api.nvim_win_set_var(preview_window, "is-goto-preview-window", 1)
 
