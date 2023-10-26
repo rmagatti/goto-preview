@@ -119,19 +119,11 @@ M.open_floating_win = function(target, position, opts)
 
   opts = opts or {}
   local enter = function()
-    if opts.focus_on_open ~= nil then
-      return opts.focus_on_open
-    else
-      return M.conf.focus_on_open
-    end
+    return opts.focus_on_open or M.conf.focus_on_open
   end
 
   local stack_floating_preview_windows = function()
-    if opts.stack_floating_preview_windows ~= nil then
-      return opts.stack_floating_preview_windows
-    else
-      return M.conf.stack_floating_preview_windows
-    end
+    return opts.stack_floating_preview_windows or M.conf.stack_floating_preview_windows
   end
 
   logger.debug("focus_on_open", enter())
