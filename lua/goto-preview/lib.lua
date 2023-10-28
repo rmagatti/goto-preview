@@ -87,7 +87,6 @@ M.close_if_is_goto_preview = function(win_handle)
 
   local success, result = pcall(vim.api.nvim_win_get_var, win_handle, "is-goto-preview-window")
   if success and result == 1 then
-
     run_post_close_hook_function(curr_buf, curr_win)
     vim.api.nvim_win_close(win_handle, M.conf.force_close)
   end
@@ -165,10 +164,10 @@ M.open_floating_win = function(target, position, opts)
   end
 
   if M.conf.opacity then
-    vim.api.nvim_win_set_option(preview_window, "winblend", M.conf.opacity)
+    vim.api.nvim_set_option_value("winblend", M.conf.opacity, { win = preview_window })
   end
   if vim.api.nvim_get_current_buf() ~= buffer then
-    vim.api.nvim_buf_set_option(buffer, "bufhidden", M.conf.bufhidden)
+    vim.api.nvim_set_option_value("bufhidden", M.conf.bufhidden, { buf = buffer })
   end
   vim.api.nvim_win_set_var(preview_window, "is-goto-preview-window", 1)
 
