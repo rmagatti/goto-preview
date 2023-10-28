@@ -118,11 +118,11 @@ end
 
 local function create_preview_win(buffer, bufpos, zindex, opts)
   local enter = function()
-    return opts.focus_on_open or M.conf.focus_on_open
+    return opts.focus_on_open or M.conf.focus_on_open or false
   end
 
   local stack_floating_preview_windows = function()
-    return opts.stack_floating_preview_windows or M.conf.stack_floating_preview_windows
+    return opts.stack_floating_preview_windows or M.conf.stack_floating_preview_windows or false
   end
 
   logger.debug("focus_on_open", enter())
@@ -174,6 +174,9 @@ M.open_floating_win = function(target, position, opts)
 
   if M.conf.opacity then
     vim.api.nvim_win_set_option(preview_window, "winblend", M.conf.opacity)
+  end
+  if not is_curr_buf(buffer) then
+    vim.api.nvim_buf_set_option(buffer, "bufhidden", M.conf.bufhidden)
   end
   vim.api.nvim_win_set_var(preview_window, "is-goto-preview-window", 1)
 
