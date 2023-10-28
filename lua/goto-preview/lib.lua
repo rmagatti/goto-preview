@@ -164,11 +164,14 @@ M.open_floating_win = function(target, position, opts)
   end
 
   if M.conf.opacity then
-    vim.api.nvim_set_option_value("winblend", M.conf.opacity, { win = preview_window })
+    local yay, _ = pcall(vim.api.nvim_set_option_value, "winblend", M.conf.opacity, { win = preview_window })
+    if not yay then vim.api.nvim_win_set_option(preview_window, "winblend", M.conf.opacity) end
   end
   if vim.api.nvim_get_current_buf() ~= buffer then
-    vim.api.nvim_set_option_value("bufhidden", M.conf.bufhidden, { buf = buffer })
+    local yay, _ = pcall(vim.api.nvim_set_option_value, "bufhidden", M.conf.bufhidden, { buf = buffer })
+    if not yay then vim.api.nvim_buf_set_option(buffer, "bufhidden", M.conf.bufhidden) end
   end
+
   vim.api.nvim_win_set_var(preview_window, "is-goto-preview-window", 1)
 
   logger.debug(vim.inspect {
