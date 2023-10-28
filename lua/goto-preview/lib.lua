@@ -125,6 +125,10 @@ local function create_preview_win(buffer, bufpos, zindex, opts)
     return opts.stack_floating_preview_windows or M.conf.stack_floating_preview_windows or false
   end
 
+  local open_new_window_for_current_file = function()
+    return opts.open_new_window_for_current_file or M.conf.open_new_window_for_current_file or false
+  end
+
   logger.debug("focus_on_open", enter())
   logger.debug("stack_floating_preview_windows", stack_floating_preview_windows())
 
@@ -132,7 +136,7 @@ local function create_preview_win(buffer, bufpos, zindex, opts)
   local curr_win = vim.api.nvim_get_current_win()
   local success, result = pcall(vim.api.nvim_win_get_var, curr_win, "is-goto-preview-window")
 
-  if is_curr_buf(buffer) then
+  if is_curr_buf(buffer) and not open_new_window_for_current_file() then
     return curr_win
   end
 
