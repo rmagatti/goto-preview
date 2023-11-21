@@ -11,6 +11,10 @@ local function is_floating(window_id)
   return vim.api.nvim_win_get_config(window_id).relative ~= ""
 end
 
+local function is_curr_buf(buffer)
+  return vim.api.nvim_get_current_buf() == buffer
+end
+
 local logger = {
   debug = function(...)
     if M.conf.debug then
@@ -112,26 +116,17 @@ local function set_title_pos()
   return M.conf.preview_window_title.enable and M.conf.preview_window_title.position or nil
 end
 
-M.open_floating_win = function(target, position, opts)
-  local buffer = type(target) == "string" and vim.uri_to_bufnr(target) or target
-  local bufpos = { vim.fn.line "." - 1, vim.fn.col "." } -- FOR relative='win'
-  local zindex = vim.tbl_isempty(M.windows) and 1 or #M.windows + 1
-
-  opts = opts or {}
+local function create_preview_win(buffer, bufpos, zindex, opts)
   local enter = function()
-    if opts.focus_on_open ~= nil then
-      return opts.focus_on_open
-    else
-      return M.conf.focus_on_open
-    end
+    return opts.focus_on_open or M.conf.focus_on_open or false
   end
 
   local stack_floating_preview_windows = function()
-    if opts.stack_floating_preview_windows ~= nil then
-      return opts.stack_floating_preview_windows
-    else
-      return M.conf.stack_floating_preview_windows
-    end
+    return opts.stack_floating_preview_windows or M.conf.stack_floating_preview_windows or false
+  end
+
+  local same_file_float_preview = function()
+    return opts.same_file_float_preview or M.conf.same_file_float_preview or false
   end
 
   logger.debug("focus_on_open", enter())
@@ -140,6 +135,11 @@ M.open_floating_win = function(target, position, opts)
   local preview_window
   local curr_win = vim.api.nvim_get_current_win()
   local success, result = pcall(vim.api.nvim_win_get_var, curr_win, "is-goto-preview-window")
+
+  if is_curr_buf(buffer) and not same_file_float_preview() then
+    return curr_win
+  end
+
   if not stack_floating_preview_windows() and is_floating(curr_win) and success and result == 1 then
     preview_window = curr_win
     vim.api.nvim_win_set_config(preview_window, {
@@ -164,10 +164,22 @@ M.open_floating_win = function(target, position, opts)
     table.insert(M.windows, preview_window)
   end
 
+  return preview_window
+end
+
+M.open_floating_win = function(target, position, opts)
+  local buffer = type(target) == "string" and vim.uri_to_bufnr(target) or target
+  local bufpos = { vim.fn.line(".") - 1, vim.fn.col(".") } -- FOR relative='win'
+  local zindex = vim.tbl_isempty(M.windows) and 1 or #M.windows + 1
+
+  opts = opts or {}
+
+  local preview_window = create_preview_win(buffer, bufpos, zindex, opts)
+
   if M.conf.opacity then
     vim.api.nvim_win_set_option(preview_window, "winblend", M.conf.opacity)
   end
-  if vim.api.nvim_get_current_buf() ~= buffer then
+  if not is_curr_buf(buffer) then
     vim.api.nvim_buf_set_option(buffer, "bufhidden", M.conf.bufhidden)
   end
   vim.api.nvim_win_set_var(preview_window, "is-goto-preview-window", 1)
