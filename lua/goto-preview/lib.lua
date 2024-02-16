@@ -56,6 +56,11 @@ M.remove_win = function(win)
   local index = M.tablefind(M.windows, win or vim.api.nvim_get_current_win())
   if index then
     table.remove(M.windows, index)
+    -- Focus the previous preview if there is one
+    if index > 1 then
+      local prev_win = M.windows[index - 1]
+      vim.api.nvim_set_current_win(prev_win)
+    end
   end
 end
 
