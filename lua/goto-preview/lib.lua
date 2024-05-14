@@ -174,7 +174,7 @@ end
 M.open_floating_win = function(target, position, opts)
   local buffer = type(target) == "string" and vim.uri_to_bufnr(target) or target
   local bufpos = { vim.fn.line(".") - 1, vim.fn.col(".") } -- FOR relative='win'
-  local zindex = vim.tbl_isempty(M.windows) and 1 or #M.windows + 1
+  local zindex = M.conf.zindex + (vim.tbl_isempty(M.windows) and 0 or #M.windows)
 
   opts = opts or {}
 

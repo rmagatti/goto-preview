@@ -32,6 +32,7 @@ local M = {
     stack_floating_preview_windows = true, -- Whether to nest floating windows
     same_file_float_preview = true, -- Whether to open a new floating window for a reference within the current file
     preview_window_title = { enable = true, position = "left" }, -- Whether to set the preview window title as the filename
+    zindex = 1, -- Starting zindex for the stack of floating windows
   },
 }
 
