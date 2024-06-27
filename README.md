@@ -13,6 +13,15 @@ Make sure you use Neovim `0.5.1` or GUIs like [Goneovim](https://github.com/akiy
 There is a bug in [Neovim `0.5`](https://github.com/neovim/neovim/issues/14735) that prevents the correct positioning of more than one preview window.
 
 ### 📦 Installation
+[Lazy.nvim](https://github.com/folke/lazy.nvim)
+```lua
+{
+  "rmagatti/goto-preview",
+  event = "BufEnter",
+  config = true, -- necessary as per https://github.com/rmagatti/goto-preview/issues/88
+}
+```
+
 [Packer.nvim](https://github.com/wbthomason/packer.nvim)
 ```lua
 use {
