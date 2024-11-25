@@ -353,12 +353,19 @@ end
 
 M.get_handler = function(lsp_call, opts)
   -- Only really need to check one of the handlers
-  if debug.getinfo(vim.lsp.handlers["textDocument/definition"]).nparams == 4 then
-    logger.debug "calling new handler"
-    return handler(lsp_call, opts)
-  else
-    logger.debug "calling legacy handler"
-    return legacy_handler(lsp_call, opts)
+  for k, v in pairs(vim.lsp.handlers) do
+    if string.find(k, "textDocument")
+      and type(v) == "function"
+      and debug.getinfo(v).isvararg == false
+    then
+      if debug.getinfo(v).nparams == 4 then
+        logger.debug "calling new handler"
+        return handler(lsp_call, opts)
+      else
+        logger.debug "calling legacy handler"
+        return legacy_handler(lsp_call, opts)
+      end
+    end
   end
 end
 
