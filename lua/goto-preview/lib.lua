@@ -245,14 +245,80 @@ M.buffer_left = function()
   end
 end
 
-local function _open_references_window(val)
-  M.open_floating_win(vim.uri_from_fname(val.filename), { val.lnum, val.col })
+local function _open_references_window(filename, pos)
+  M.open_floating_win(vim.uri_from_fname(filename), pos)
 end
 
-local function open_references_previewer(prompt_title, items)
-  local has_telescope, _ = pcall(require, "telescope")
+local function _format_item_entry(item)
+  -- Format text to the following standard
+  -- some/path/to/file:20:1  | text in the file
+  -- some/longer/path/to/f...| text in the file
+  local filename_width = 30
 
-  if has_telescope then
+  -- This sets up the correct field for mini.pick
+  item.path = item.filename
+  local rel_path = vim.fn.fnamemodify(item.filename, ":.")
+  local display_path = string.format("%s:%d:%d", rel_path, item.lnum or 1, item.col or 1)
+
+  if #display_path > filename_width then
+    display_path = display_path:sub(1, filename_width - 3) .. "..."
+  else
+    display_path = display_path .. string.rep(" ", filename_width - #display_path)
+  end
+
+  -- Remove leading and trailing spaces
+  local trimmed = string.gsub(item.text, "^%s*(.-)%s*$", "%1")
+
+  item.text = display_path .. "| " .. trimmed
+  return item.text
+end
+
+local providers = {
+  snacks = function(_, _)
+    local ok, snacks = pcall(require, "snacks")
+    if not ok then
+      error "Snacks not installed"
+    end
+
+    snacks.picker.pick {
+      source = "lsp_references",
+      confirm = function(picker)
+        local selection = picker:current()
+        picker:close()
+
+        if selection ~= nil then
+          _open_references_window(selection.file, selection.pos)
+        end
+      end,
+    }
+  end,
+
+  fzf_lua = function(_, _)
+    local ok, fzf = pcall(require, "fzf-lua")
+    if not ok then
+      error "fzf-lua not installed"
+    end
+
+    fzf.lsp_references {
+      actions = {
+        ["default"] = function(selected, opts)
+          local selection = fzf.path.entry_to_file(selected[1], opts)
+
+          _open_references_window(
+            selection.path,
+            { selection.line, selection.col }
+          )
+        end,
+      },
+    }
+  end,
+
+  telescope = function(prompt_title, items)
+    local ok, _ = pcall(require, "telescope")
+    if not ok then
+      error "Telescope not installed"
+    end
+
     local pickers = require "telescope.pickers"
     local make_entry = require "telescope.make_entry"
     local telescope_conf = require("telescope.config").values
@@ -269,32 +335,103 @@ local function open_references_previewer(prompt_title, items)
       previewer = telescope_conf.qflist_previewer(opts)
     end
 
-    if #items == 1 then
-      _open_references_window(items[1])
-    else
-      pickers.new(opts, {
-        prompt_title = prompt_title,
-        finder = finders.new_table {
-          results = items,
-          entry_maker = entry_maker,
-        },
-        previewer = previewer,
-        sorter = telescope_conf.generic_sorter(opts),
-        attach_mappings = function(prompt_bufnr)
-          actions.select_default:replace(function()
-            local selection = action_state.get_selected_entry()
-            actions.close(prompt_bufnr)
+    pickers.new(opts, {
+      prompt_title = prompt_title,
+      finder = finders.new_table {
+        results = items,
+        entry_maker = entry_maker,
+      },
+      previewer = previewer,
+      sorter = telescope_conf.generic_sorter(opts),
+      attach_mappings = function(prompt_bufnr)
+        actions.select_default:replace(function()
+          local selection = action_state.get_selected_entry()
+          actions.close(prompt_bufnr)
 
-            _open_references_window(selection.value)
-          end)
+          _open_references_window(selection.value.filename, {
+            selection.value.lnum,
+            selection.value.col,
+          })
+        end)
 
-          return true
-        end,
-      }):find()
+        return true
+      end,
+    }):find()
+  end,
+
+  mini_pick = function(prompt_title, items)
+    local ok, mini_pick = pcall(require, "mini.pick")
+    if not ok then
+      error "MiniPick not installed"
     end
-  else
-    error "goto_preview_references requires Telescope.nvim"
+
+    for _, item in ipairs(items) do
+      _format_item_entry(item)
+    end
+
+    mini_pick.start {
+      source = {
+        name = prompt_title,
+        items = items,
+        show = function(buf_id, items_to_show, query)
+          mini_pick.default_show(buf_id, items_to_show, query, {
+            show_icons = true,
+          })
+        end,
+        choose = function(item)
+          _open_references_window(item.filename, {
+            item.lnum,
+            item.col,
+          })
+        end,
+      },
+      preview = function(buf_id, item)
+        mini_pick.default_preview(buf_id, item, nil)
+      end,
+    }
+  end,
+
+  default = function(prompt_title, items)
+    vim.ui.select(items, {
+      prompt = prompt_title,
+      format_item = function(item)
+        if item ~= nil then
+          return _format_item_entry(item)
+        end
+      end
+      }, function(choice)
+      if choice ~= nil then
+        _open_references_window(choice.filename, {
+          choice.lnum,
+          choice.col,
+        })
+      end
+    end)
+  end,
+}
+
+local function open_references_previewer(prompt_title, items)
+  if #items == 1 then
+    local item = items[1]
+    _open_references_window(item.filename, { item.lnum, item.col })
+    return true
   end
+
+  local provider = M.conf.references.provider
+  local provider_fn = providers[provider]
+
+  -- Try selected provider first
+  if provider_fn then
+    local ok, err = pcall(provider_fn, prompt_title, items)
+    if ok then
+      return
+    end
+    -- Log the error and fall through to default
+    logger.debug("Provider", provider, "failed:", err)
+  end
+
+  -- Fall back to default provider
+  providers.default(prompt_title, items)
 end
 
 local handle = function(result, opts)

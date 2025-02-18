@@ -54,6 +54,7 @@ require('goto-preview').setup {
   post_open_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
   post_close_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
   references = { -- Configure the telescope UI for slowing the references cycling window.
+    provider = "telescope", -- telescope|fzf_lua|snacks|mini_pick|default
     telescope = require("telescope.themes").get_dropdown({ hide_preview = false })
   },
   -- These two configs can also be passed down to the goto-preview definition and implementation calls for one off "peak" functionality.
