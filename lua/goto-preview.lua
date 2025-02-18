@@ -28,6 +28,7 @@ local M = {
     post_open_hook = nil,  -- A function taking two arguments, a buffer and a window to be ran as a hook.
     post_close_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
     references = {
+      provider = "telescope", -- telescope|fzf_lua|snacks|mini_pick|default
       telescope = nil,
     },
     focus_on_open = true,                                        -- Focus the floating window when opening it.
