@@ -39,7 +39,7 @@ local M = {
     same_file_float_preview = true,                              -- Whether to open a new floating window for a reference within the current file
     preview_window_title = { enable = true, position = "left" }, -- Whether to set the preview window title as the filename
     zindex = 1,                                                  -- Starting zindex for the stack of floating windows
-    custom_ui_input = true,                                     -- Whether to override vim.ui.input with our custom implementation
+    vim_ui_input = true,                                         -- Whether to override vim.ui.input with our custom implementation
   },
 }
 
@@ -58,7 +58,7 @@ M.setup = function(conf)
   end
 
   -- Setup custom input UI if enabled
-  if M.conf.custom_ui_input then
+  if M.conf.vim_ui_input then
     lib.setup_custom_input()
   end
 end
