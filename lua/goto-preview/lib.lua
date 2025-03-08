@@ -16,6 +16,7 @@ local function create_simple_logger(options)
     if levels[level] >= current_level then
       local args = { ... }
       local msg = ""
+      ---@diagnostic disable-next-line: unused-local
       for i, v in ipairs(args) do
         msg = msg .. tostring(v) .. " "
       end
@@ -45,7 +46,7 @@ M.setup_lib = function(conf)
   end
 
   M.logger = logger
-  logger.info("lib:", vim.inspect(M.conf))
+  logger.debug("lib:", vim.inspect(M.conf))
 end
 
 local function is_floating(window_id)
