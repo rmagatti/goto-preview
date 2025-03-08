@@ -1,14 +1,51 @@
+---@diagnostic disable: lowercase-global
 local M = {
   conf = {},
 }
 
 logger = nil
 
+-- Simple logger implementation for fallback
+local function create_simple_logger(options)
+  local log_level = options and options.log_level or "info"
+  local prefix = options and options.prefix or ""
+  local levels = { debug = 1, info = 2, warn = 3, error = 4 }
+  local current_level = levels[log_level] or 2
+
+  local function log(level, ...)
+    if levels[level] >= current_level then
+      local args = { ... }
+      local msg = ""
+      for i, v in ipairs(args) do
+        msg = msg .. tostring(v) .. " "
+      end
+      print(string.format("[%s][FALLBACK LOGGER - missing logger.nvim dependency] %s: %s", prefix, level:upper(), msg))
+    end
+  end
+
+  return {
+    debug = function(...) log("debug", ...) end,
+    info = function(...) log("info", ...) end,
+    warn = function(...) log("warn", ...) end,
+    error = function(...) log("error", ...) end,
+    new = function(opts) return create_simple_logger(opts) end
+  }
+end
+
 M.setup_lib = function(conf)
   M.conf = vim.tbl_deep_extend("force", M.conf, conf)
-  logger = require("logger"):new({ log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" })
+
+  -- Try to require the logger module, fall back to simple implementation if not available
+  local ok, logger_module = pcall(require, "logger")
+  if ok then
+    logger = logger_module:new({ log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" })
+  else
+    -- Use the simple logger implementation
+    logger = create_simple_logger({ log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" })
+  end
+
   M.logger = logger
-  logger.debug("lib:", vim.inspect(M.conf))
+  logger.info("lib:", vim.inspect(M.conf))
 end
 
 local function is_floating(window_id)
