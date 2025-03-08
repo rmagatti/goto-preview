@@ -25,8 +25,8 @@ local M = {
         return uri, { range.start.line + 1, range.start.character }
       end,
     },
-    post_open_hook = nil,  -- A function taking two arguments, a buffer and a window to be ran as a hook.
-    post_close_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
+    post_open_hook = nil,     -- A function taking two arguments, a buffer and a window to be ran as a hook.
+    post_close_hook = nil,    -- A function taking two arguments, a buffer and a window to be ran as a hook.
     references = {
       provider = "telescope", -- telescope|fzf_lua|snacks|mini_pick|default
       telescope = nil,
@@ -39,6 +39,7 @@ local M = {
     same_file_float_preview = true,                              -- Whether to open a new floating window for a reference within the current file
     preview_window_title = { enable = true, position = "left" }, -- Whether to set the preview window title as the filename
     zindex = 1,                                                  -- Starting zindex for the stack of floating windows
+    custom_ui_input = true,                                     -- Whether to override vim.ui.input with our custom implementation
   },
 }
 
@@ -54,6 +55,11 @@ M.setup = function(conf)
   end
   if M.conf.resizing_mappings then
     M.apply_resizing_mappings()
+  end
+
+  -- Setup custom input UI if enabled
+  if M.conf.custom_ui_input then
+    lib.setup_custom_input()
   end
 end
 

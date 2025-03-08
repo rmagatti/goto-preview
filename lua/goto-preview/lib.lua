@@ -43,6 +43,106 @@ function M.tablefind(tab, el)
   end
 end
 
+--- Setup the custom UI input functionality
+M.setup_custom_input = function()
+  -- Store the original vim.ui.input
+  M._original_input = vim.ui.input
+
+  -- Replace with our custom implementation
+  vim.ui.input = function(opts, on_confirm)
+    -- Create a new buffer for the input field
+    local buf = vim.api.nvim_create_buf(false, true)
+
+    -- Pre-populate with default text if provided
+    if opts.default then
+      vim.api.nvim_buf_set_lines(buf, 0, -1, false, { opts.default })
+    else
+      vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "" })
+    end
+
+    -- Open the floating window using our existing function
+    local win = M.open_floating_win(buf, { 1, 0 }, {
+      focus_on_open = true,
+      dismiss_on_move = false,
+      -- Override some settings specific to input windows
+      same_file_float_preview = true
+    })
+
+    -- Move cursor to the end of any default text
+    local line_length = #(opts.default or "")
+    vim.api.nvim_win_set_cursor(win, { 1, line_length })
+
+    -- Set window title if we have a prompt
+    if vim.fn.has("nvim-0.9.0") == 1 and opts.prompt then
+      vim.api.nvim_win_set_config(win, {
+        title = opts.prompt,
+        title_pos = "left"
+      })
+    end
+
+    -- Function to handle result and clean up
+    local function handle_result(result)
+      -- Remove from windows table
+      local index = M.tablefind(M.windows, win)
+      if index then
+        table.remove(M.windows, index)
+      end
+
+      -- Run post close hook if defined
+      if M.conf.post_close_hook then
+        run_post_close_hook_function(buf, win)
+      end
+
+      -- Close the window
+      pcall(vim.api.nvim_win_close, win, true)
+
+      -- Call the callback
+      if on_confirm then
+        on_confirm(result)
+      end
+    end
+
+    -- Set keymaps for the input window
+    local keymaps = {
+      -- Normal mode mappings
+      n = {
+        ["<CR>"] = function()
+          local result = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
+          handle_result(result)
+        end,
+        ["<Esc>"] = function()
+          handle_result(nil)
+        end,
+        ["i"] = function()
+          vim.cmd("startinsert")
+        end,
+        ["a"] = function()
+          vim.cmd("startinsert")
+        end,
+      },
+
+      -- Insert mode mappings
+      i = {
+        ["<CR>"] = function()
+          local result = vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1]
+          handle_result(result)
+        end,
+      },
+    }
+
+    -- Apply all keymaps
+    for mode, maps in pairs(keymaps) do
+      for key, func in pairs(maps) do
+        vim.keymap.set(mode, key, func, { buffer = buf, nowait = true })
+      end
+    end
+
+    -- Start in normal mode by default
+    vim.cmd("stopinsert")
+    vim.notify("Press <CR> to confirm, <Esc> to cancel", "info")
+  end
+end
+
 M.remove_win = function(win)
   local curr_buf = vim.api.nvim_get_current_buf()
   local curr_win = vim.api.nvim_get_current_win()
@@ -219,6 +319,8 @@ M.open_floating_win = function(target, position, opts)
   vim.api.nvim_win_set_cursor(preview_window, position)
 
   run_post_open_hook_function(buffer, preview_window)
+
+  return preview_window
 end
 
 M.buffer_entered = function()
@@ -399,7 +501,7 @@ local providers = {
           return _format_item_entry(item)
         end
       end
-      }, function(choice)
+    }, function(choice)
       if choice ~= nil then
         _open_references_window(choice.filename, {
           choice.lnum,
@@ -492,8 +594,8 @@ M.get_handler = function(lsp_call, opts)
   -- Only really need to check one of the handlers
   for k, v in pairs(vim.lsp.handlers) do
     if string.find(k, "textDocument")
-      and type(v) == "function"
-      and debug.getinfo(v).isvararg == false
+        and type(v) == "function"
+        and debug.getinfo(v).isvararg == false
     then
       if debug.getinfo(v).nparams == 4 then
         logger.debug "calling new handler"
