@@ -17,26 +17,10 @@ There is a bug in [Neovim `0.5`](https://github.com/neovim/neovim/issues/14735) 
 ```lua
 {
   "rmagatti/goto-preview",
+  dependencies = { "rmagatti/logger.nvim" },
   event = "BufEnter",
   config = true, -- necessary as per https://github.com/rmagatti/goto-preview/issues/88
 }
-```
-
-[Packer.nvim](https://github.com/wbthomason/packer.nvim)
-```lua
-use {
-  'rmagatti/goto-preview',
-  config = function()
-    require('goto-preview').setup {}
-  end
-}
-```
-[vim-plug](https://github.com/junegunn/vim-plug)
-```vim
-Plug 'rmagatti/goto-preview'
-
-" Then at some later point (outside of the plug block):
-:lua require('goto-preview').setup {}
 ```
 
 ### ⚙️ Configuration
