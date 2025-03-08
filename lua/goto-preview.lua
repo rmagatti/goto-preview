@@ -46,8 +46,8 @@ local M = {
 M.setup = function(conf)
   conf = conf or {}
   M.conf = vim.tbl_deep_extend("force", M.conf, conf)
-  lib.logger.debug("non-lib:", vim.inspect(M.conf))
   lib.setup_lib(M.conf)
+  lib.logger.debug("non-lib:", vim.inspect(M.conf))
   lib.setup_aucmds()
 
   if M.conf.default_mappings then
@@ -76,6 +76,7 @@ M.lsp_request_definition = function(opts)
   local params = vim.lsp.util.make_position_params(nil, get_offset_encoding())
   local lsp_call = "textDocument/definition"
   local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler(lsp_call, opts))
+  lib.logger.debug("lsp_request_definition", success)
   if not success then
     print_lsp_error(lsp_call)
   end
@@ -90,6 +91,7 @@ M.lsp_request_type_definition = function(opts)
   local params = vim.lsp.util.make_position_params(nil, get_offset_encoding())
   local lsp_call = "textDocument/typeDefinition"
   local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler(lsp_call, opts))
+  lib.logger.debug("lsp_request_type_definition", success)
   if not success then
     print_lsp_error(lsp_call)
   end
@@ -104,6 +106,7 @@ M.lsp_request_implementation = function(opts)
   local params = vim.lsp.util.make_position_params(nil, get_offset_encoding())
   local lsp_call = "textDocument/implementation"
   local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler(lsp_call, opts))
+  lib.logger.debug("lsp_request_implementation", success)
   if not success then
     print_lsp_error(lsp_call)
   end
@@ -118,6 +121,7 @@ M.lsp_request_declaration = function(opts)
   local params = vim.lsp.util.make_position_params(nil, get_offset_encoding())
   local lsp_call = "textDocument/declaration"
   local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler(lsp_call, opts))
+  lib.logger.debug("lsp_request_declaration", success)
   if not success then
     print_lsp_error(lsp_call)
   end

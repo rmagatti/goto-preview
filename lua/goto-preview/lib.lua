@@ -2,9 +2,13 @@ local M = {
   conf = {},
 }
 
+logger = nil
+
 M.setup_lib = function(conf)
   M.conf = vim.tbl_deep_extend("force", M.conf, conf)
-  M.logger.debug("lib:", vim.inspect(M.conf))
+  logger = require("logger"):new({ log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" })
+  M.logger = logger
+  logger.debug("lib:", vim.inspect(M.conf))
 end
 
 local function is_floating(window_id)
@@ -15,15 +19,6 @@ local function is_curr_buf(buffer)
   return vim.api.nvim_get_current_buf() == buffer
 end
 
-local logger = {
-  debug = function(...)
-    if M.conf.debug then
-      print("goto-preview:", ...)
-    end
-  end,
-}
-
-M.logger = logger
 
 local run_post_open_hook_function = function(buffer, new_window)
   local success, result = pcall(M.conf.post_open_hook, buffer, new_window)
@@ -54,23 +49,28 @@ M.setup_custom_input = function()
     local buf = vim.api.nvim_create_buf(false, true)
 
     -- Pre-populate with default text if provided
-    if opts.default then
-      vim.api.nvim_buf_set_lines(buf, 0, -1, false, { opts.default })
-    else
-      vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "" })
-    end
+    local initial_text = opts.default or ""
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { initial_text })
+
+    -- Calculate appropriate width based on content + padding
+    local content_width = #initial_text
+    local min_width = 20  -- Minimum width for small inputs
+    local max_width = 120 -- Maximum width to prevent too wide windows
+    local padding = 16    -- Extra space for cursor, line numbers, and comfort
+    local width = math.min(max_width, math.max(min_width, content_width + padding))
 
     -- Open the floating window using our existing function
     local win = M.open_floating_win(buf, { 1, 0 }, {
       focus_on_open = true,
       dismiss_on_move = false,
       -- Override some settings specific to input windows
-      same_file_float_preview = true
+      same_file_float_preview = true,
+      width = width,
+      height = 1 -- Only one line for input
     })
 
     -- Move cursor to the end of any default text
-    local line_length = #(opts.default or "")
-    vim.api.nvim_win_set_cursor(win, { 1, line_length })
+    vim.api.nvim_win_set_cursor(win, { 1, #initial_text })
 
     -- Set window title if we have a prompt
     if vim.fn.has("nvim-0.9.0") == 1 and opts.prompt then
@@ -142,6 +142,7 @@ M.setup_custom_input = function()
     vim.notify("Press <CR> to confirm, <Esc> to cancel", "info")
   end
 end
+
 
 M.remove_win = function(win)
   local curr_buf = vim.api.nvim_get_current_buf()
@@ -235,6 +236,8 @@ local function create_preview_win(buffer, bufpos, zindex, opts)
 
   logger.debug("focus_on_open", enter())
   logger.debug("stack_floating_preview_windows", stack_floating_preview_windows())
+  logger.debug("width" .. vim.inspect(opts.width or M.conf.width), "info")
+  logger.debug("height" .. vim.inspect(opts.height or M.conf.height), "info")
 
   local preview_window
   local curr_win = vim.api.nvim_get_current_win()
@@ -247,16 +250,16 @@ local function create_preview_win(buffer, bufpos, zindex, opts)
   if not stack_floating_preview_windows() and is_floating(curr_win) and success and result == 1 then
     preview_window = curr_win
     vim.api.nvim_win_set_config(preview_window, {
-      width = M.conf.width,
-      height = M.conf.height,
+      width = opts.width or M.conf.width,
+      height = opts.height or M.conf.height,
       border = M.conf.border,
     })
     vim.api.nvim_win_set_buf(preview_window, buffer)
   else
     preview_window = vim.api.nvim_open_win(buffer, enter(), {
       relative = "win",
-      width = M.conf.width,
-      height = M.conf.height,
+      width = opts.width or M.conf.width,
+      height = opts.height or M.conf.height,
       border = M.conf.border,
       bufpos = bufpos,
       zindex = zindex,
