@@ -7,8 +7,11 @@ A small Neovim plugin for previewing native LSP's goto definition, type definiti
 #### 🔗 References
 <img src="https://github.com/rmagatti/readme-assets/blob/main/goto-preview-references.gif" />
 
+#### ⌨️vim.ui.input
+<img src="https://github.com/rmagatti/readme-assets/blob/main/vim-ui-input-fullres.gif" />
+
 ### ⚠️ IMPORTANT NOTE
-Make sure you use Neovim `0.5.1` or GUIs like [Goneovim](https://github.com/akiyosi/goneovim) and [Uivonim](https://github.com/smolck/uivonim).
+Make sure you use Neovim > `0.5.1` or GUIs like [Goneovim](https://github.com/akiyosi/goneovim), [Uivonim](https://github.com/smolck/uivonim) or [Neovide](https://github.com/neovide/neovide).
 
 There is a bug in [Neovim `0.5`](https://github.com/neovim/neovim/issues/14735) that prevents the correct positioning of more than one preview window.
 
@@ -22,6 +25,9 @@ There is a bug in [Neovim `0.5`](https://github.com/neovim/neovim/issues/14735) 
   config = true, -- necessary as per https://github.com/rmagatti/goto-preview/issues/88
 }
 ```
+
+After installation it is recommended you run `:checkhealth goto-preview` to check if everything is in order.
+Note: the plugin has to be loaded for the checkhealth to run.
 
 ### ⚙️ Configuration
 
@@ -100,7 +106,7 @@ Until more are added one can pass in custom responses through the `lsp_configs` 
 
 ### Tested with
 ```
-NVIM v0.5.0-dev+7d4f890aa
+NVIM v0.11.0-dev-5068+g7371abf755-Homebrew
 Build type: Release
-LuaJIT 2.1.0-beta3
+LuaJIT 2.1.1736781742
 ```
