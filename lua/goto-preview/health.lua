@@ -14,7 +14,6 @@ function M.check()
 
   -- Check if logger.nvim is installed
   local has_logger, _ = pcall(require, "logger")
-  has_logger = false
   if has_logger then
     health.ok("logger.nvim is installed")
   else
