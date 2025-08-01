@@ -46,13 +46,13 @@ M.setup_lib = function(conf)
   M.conf = vim.tbl_deep_extend("force", M.conf, conf)
 
   -- Try to require the logger module, fall back to simple implementation if not available
-  -- local ok, logger_module = pcall(require, "logger")
-  -- if ok then
-  --   logger = logger_module:new { log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" }
-  -- else
-  -- Use the simple logger implementation
-  logger = create_simple_logger { log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" }
-  -- end
+  local ok, logger_module = pcall(require, "logger")
+  if ok then
+    logger = logger_module:new { log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" }
+  else
+    -- Use the simple logger implementation
+    logger = create_simple_logger { log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" }
+  end
 
   M.logger = logger
   logger.debug("lib:", vim.inspect(M.conf))
@@ -100,9 +100,9 @@ M.setup_custom_input = function()
 
     -- Calculate appropriate width based on content + padding
     local content_width = #initial_text
-    local min_width = 20 -- Minimum width for small inputs
+    local min_width = 20  -- Minimum width for small inputs
     local max_width = 120 -- Maximum width to prevent too wide windows
-    local padding = 16 -- Extra space for cursor, line numbers, and comfort
+    local padding = 16    -- Extra space for cursor, line numbers, and comfort
     local width = math.min(max_width, math.max(min_width, content_width + padding))
 
     -- Open the floating window using our existing function
@@ -355,7 +355,8 @@ M.open_floating_win = function(target, position, opts)
 
   logger.debug("dismiss_on_move", dismiss())
   if dismiss() then
-    vim.api.nvim_command(string.format("autocmd CursorMoved <buffer> ++once lua require('goto-preview').dismiss_preview(%d)", preview_window))
+    vim.api.nvim_command(string.format(
+      "autocmd CursorMoved <buffer> ++once lua require('goto-preview').dismiss_preview(%d)", preview_window))
   end
 
   -- Set position of the preview buffer equal to the target position so that correct preview position shows
@@ -478,29 +479,29 @@ local providers = {
     end
 
     pickers
-      .new(opts, {
-        prompt_title = prompt_title,
-        finder = finders.new_table {
-          results = items,
-          entry_maker = entry_maker,
-        },
-        previewer = previewer,
-        sorter = telescope_conf.generic_sorter(opts),
-        attach_mappings = function(prompt_bufnr)
-          actions.select_default:replace(function()
-            local selection = action_state.get_selected_entry()
-            actions.close(prompt_bufnr)
+        .new(opts, {
+          prompt_title = prompt_title,
+          finder = finders.new_table {
+            results = items,
+            entry_maker = entry_maker,
+          },
+          previewer = previewer,
+          sorter = telescope_conf.generic_sorter(opts),
+          attach_mappings = function(prompt_bufnr)
+            actions.select_default:replace(function()
+              local selection = action_state.get_selected_entry()
+              actions.close(prompt_bufnr)
 
-            _open_references_window(selection.value.filename, {
-              selection.value.lnum,
-              selection.value.col,
-            })
-          end)
+              _open_references_window(selection.value.filename, {
+                selection.value.lnum,
+                selection.value.col,
+              })
+            end)
 
-          return true
-        end,
-      })
-      :find()
+            return true
+          end,
+        })
+        :find()
   end,
 
   mini_pick = function(prompt_title, items)
