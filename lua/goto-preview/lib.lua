@@ -1,9 +1,8 @@
----@diagnostic disable: lowercase-global
 local M = {
   conf = {},
 }
 
-logger = nil
+local logger = nil
 
 -- Simple logger implementation for fallback
 local function create_simple_logger(options)
@@ -17,7 +16,7 @@ local function create_simple_logger(options)
       local args = { ... }
       local msg = ""
       ---@diagnostic disable-next-line: unused-local
-      for i, v in ipairs(args) do
+      for _, v in ipairs(args) do
         msg = msg .. tostring(v) .. " "
       end
       print(string.format("[%s][FALLBACK LOGGER - missing logger.nvim dependency] %s: %s", prefix, level:upper(), msg))
@@ -25,11 +24,21 @@ local function create_simple_logger(options)
   end
 
   return {
-    debug = function(...) log("debug", ...) end,
-    info = function(...) log("info", ...) end,
-    warn = function(...) log("warn", ...) end,
-    error = function(...) log("error", ...) end,
-    new = function(opts) return create_simple_logger(opts) end
+    debug = function(...)
+      log("debug", ...)
+    end,
+    info = function(...)
+      log("info", ...)
+    end,
+    warn = function(...)
+      log("warn", ...)
+    end,
+    error = function(...)
+      log("error", ...)
+    end,
+    new = function(opts)
+      return create_simple_logger(opts)
+    end,
   }
 end
 
@@ -37,13 +46,13 @@ M.setup_lib = function(conf)
   M.conf = vim.tbl_deep_extend("force", M.conf, conf)
 
   -- Try to require the logger module, fall back to simple implementation if not available
-  local ok, logger_module = pcall(require, "logger")
-  if ok then
-    logger = logger_module:new({ log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" })
-  else
+  -- local ok, logger_module = pcall(require, "logger")
+  -- if ok then
+  --   logger = logger_module:new { log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" }
+  -- else
     -- Use the simple logger implementation
-    logger = create_simple_logger({ log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" })
-  end
+    logger = create_simple_logger { log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" }
+  -- end
 
   M.logger = logger
   logger.debug("lib:", vim.inspect(M.conf))
@@ -56,7 +65,6 @@ end
 local function is_curr_buf(buffer)
   return vim.api.nvim_get_current_buf() == buffer
 end
-
 
 local run_post_open_hook_function = function(buffer, new_window)
   local success, result = pcall(M.conf.post_open_hook, buffer, new_window)
@@ -92,9 +100,9 @@ M.setup_custom_input = function()
 
     -- Calculate appropriate width based on content + padding
     local content_width = #initial_text
-    local min_width = 20  -- Minimum width for small inputs
+    local min_width = 20 -- Minimum width for small inputs
     local max_width = 120 -- Maximum width to prevent too wide windows
-    local padding = 16    -- Extra space for cursor, line numbers, and comfort
+    local padding = 16 -- Extra space for cursor, line numbers, and comfort
     local width = math.min(max_width, math.max(min_width, content_width + padding))
 
     -- Open the floating window using our existing function
@@ -104,17 +112,17 @@ M.setup_custom_input = function()
       -- Override some settings specific to input windows
       same_file_float_preview = true,
       width = width,
-      height = 1 -- Only one line for input
+      height = 1, -- Only one line for input
     })
 
     -- Move cursor to the end of any default text
     vim.api.nvim_win_set_cursor(win, { 1, #initial_text })
 
     -- Set window title if we have a prompt
-    if vim.fn.has("nvim-0.9.0") == 1 and opts.prompt then
+    if vim.fn.has "nvim-0.9.0" == 1 and opts.prompt then
       vim.api.nvim_win_set_config(win, {
         title = opts.prompt,
-        title_pos = "left"
+        title_pos = "left",
       })
     end
 
@@ -152,10 +160,10 @@ M.setup_custom_input = function()
           handle_result(nil)
         end,
         ["i"] = function()
-          vim.cmd("startinsert")
+          vim.cmd "startinsert"
         end,
         ["a"] = function()
-          vim.cmd("startinsert")
+          vim.cmd "startinsert"
         end,
       },
 
@@ -176,11 +184,10 @@ M.setup_custom_input = function()
     end
 
     -- Start in normal mode by default
-    vim.cmd("stopinsert")
+    vim.cmd "stopinsert"
     vim.notify("Press <CR> to confirm, <Esc> to cancel", "info")
   end
 end
-
 
 M.remove_win = function(win)
   local curr_buf = vim.api.nvim_get_current_buf()
@@ -314,7 +321,7 @@ end
 
 M.open_floating_win = function(target, position, opts)
   local buffer = type(target) == "string" and vim.uri_to_bufnr(target) or target
-  local bufpos = { vim.fn.line(".") - 1, vim.fn.col(".") } -- FOR relative='win'
+  local bufpos = { vim.fn.line "." - 1, vim.fn.col "." } -- FOR relative='win'
   local zindex = M.conf.zindex + (vim.tbl_isempty(M.windows) and 0 or #M.windows)
 
   opts = opts or {}
@@ -447,10 +454,7 @@ local providers = {
         ["default"] = function(selected, opts)
           local selection = fzf.path.entry_to_file(selected[1], opts)
 
-          _open_references_window(
-            selection.path,
-            { selection.line, selection.col }
-          )
+          _open_references_window(selection.path, { selection.line, selection.col })
         end,
       },
     }
@@ -478,28 +482,30 @@ local providers = {
       previewer = telescope_conf.qflist_previewer(opts)
     end
 
-    pickers.new(opts, {
-      prompt_title = prompt_title,
-      finder = finders.new_table {
-        results = items,
-        entry_maker = entry_maker,
-      },
-      previewer = previewer,
-      sorter = telescope_conf.generic_sorter(opts),
-      attach_mappings = function(prompt_bufnr)
-        actions.select_default:replace(function()
-          local selection = action_state.get_selected_entry()
-          actions.close(prompt_bufnr)
+    pickers
+      .new(opts, {
+        prompt_title = prompt_title,
+        finder = finders.new_table {
+          results = items,
+          entry_maker = entry_maker,
+        },
+        previewer = previewer,
+        sorter = telescope_conf.generic_sorter(opts),
+        attach_mappings = function(prompt_bufnr)
+          actions.select_default:replace(function()
+            local selection = action_state.get_selected_entry()
+            actions.close(prompt_bufnr)
 
-          _open_references_window(selection.value.filename, {
-            selection.value.lnum,
-            selection.value.col,
-          })
-        end)
+            _open_references_window(selection.value.filename, {
+              selection.value.lnum,
+              selection.value.col,
+            })
+          end)
 
-        return true
-      end,
-    }):find()
+          return true
+        end,
+      })
+      :find()
   end,
 
   mini_pick = function(prompt_title, items)
@@ -541,7 +547,7 @@ local providers = {
         if item ~= nil then
           return _format_item_entry(item)
         end
-      end
+      end,
     }, function(choice)
       if choice ~= nil then
         _open_references_window(choice.filename, {
@@ -578,24 +584,29 @@ local function open_references_previewer(prompt_title, items)
 end
 
 local handle = function(result, opts)
+  logger.debug("handle called with result:", vim.inspect(result))
+  logger.debug("current windows before processing:", vim.inspect(M.windows))
+  
   if not result then
+    logger.debug "handle: result is nil, returning"
     return
   end
 
   local data = result[1] or result
-
-  local target = nil
-  local cursor_position = {}
+  logger.debug("extracted data:", vim.inspect(data))
 
   if vim.tbl_isempty(data) then
     logger.debug "The LSP returned no results. No preview to display."
     return
   end
 
-  target, cursor_position = M.conf.lsp_configs.get_config(data)
+  local target, cursor_position = M.conf.lsp_configs.get_config(data)
+  logger.debug("opening window for target:", target, "at position:", vim.inspect(cursor_position))
 
   -- opts: focus_on_open, dismiss_on_move, etc.
   M.open_floating_win(target, cursor_position, opts)
+  
+  logger.debug("current windows after processing:", vim.inspect(M.windows))
 end
 
 local handle_references = function(result)
@@ -634,10 +645,7 @@ end
 M.get_handler = function(lsp_call, opts)
   -- Only really need to check one of the handlers
   for k, v in pairs(vim.lsp.handlers) do
-    if string.find(k, "textDocument")
-        and type(v) == "function"
-        and debug.getinfo(v).isvararg == false
-    then
+    if string.find(k, "textDocument") and type(v) == "function" and debug.getinfo(v).isvararg == false then
       if debug.getinfo(v).nparams == 4 then
         logger.debug "calling new handler"
         return handler(lsp_call, opts)

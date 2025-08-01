@@ -2,7 +2,7 @@ local lib = require "goto-preview.lib"
 
 local function get_offset_encoding()
   local client = vim.lsp.get_clients({ bufnr = 0 })[1]
-  return client and client.offset_encoding or 'utf-16'
+  return client and client.offset_encoding or "utf-16"
 end
 
 local M = {
@@ -22,24 +22,29 @@ local M = {
         local uri = data.targetUri or data.uri
         local range = data.targetRange or data.range
 
+        if range == nil then
+          vim.notify("Warning: Range is nil, returning default configuration.", vim.log.levels.WARN)
+          return uri, { 1, 0 } -- default safe values
+        end
+
         return uri, { range.start.line + 1, range.start.character }
       end,
     },
-    post_open_hook = nil,     -- A function taking two arguments, a buffer and a window to be ran as a hook.
-    post_close_hook = nil,    -- A function taking two arguments, a buffer and a window to be ran as a hook.
+    post_open_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
+    post_close_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
     references = {
       provider = "telescope", -- telescope|fzf_lua|snacks|mini_pick|default
       telescope = nil,
     },
-    focus_on_open = true,                                        -- Focus the floating window when opening it.
-    dismiss_on_move = false,                                     -- Dismiss the floating window when moving the cursor.
-    force_close = true,                                          -- passed into vim.api.nvim_win_close's second argument. See :h nvim_win_close
-    bufhidden = "wipe",                                          -- the bufhidden option to set on the floating window. See :h bufhidden
-    stack_floating_preview_windows = true,                       -- Whether to nest floating windows
-    same_file_float_preview = true,                              -- Whether to open a new floating window for a reference within the current file
-    preview_window_title = { enable = true, position = "left" }, -- Whether to set the preview window title as the filename
-    zindex = 1,                                                  -- Starting zindex for the stack of floating windows
-    vim_ui_input = false,                                        -- Whether to override vim.ui.input with our custom implementation
+    focus_on_open = true, -- Focus the floating window when opening it.
+    dismiss_on_move = false, -- Dismiss the floating window when moving the cursor.
+    force_close = true, -- passed into vim.api.nvim_win_close's second argument. See :h nvim_win_close
+    bufhidden = "wipe", -- the bufhidden option to set on the floating window. See :h bufhidden
+    stack_floating_preview_windows = true, -- Whether to nest floating windows
+    same_file_float_preview = true, -- Whether to open a new floating window for a reference within the current file
+    preview_window_title = { enable = true, position = "left" }, -- Preview window title configuration
+    zindex = 1, -- Starting zindex for the stack of floating windows
+    vim_ui_input = false, -- Whether to override vim.ui.input with our custom implementation
   },
 }
 
@@ -64,7 +69,7 @@ M.setup = function(conf)
 end
 
 local function print_lsp_error(lsp_call)
-  print("goto-preview: Error calling LSP" + lsp_call + ". The current language lsp might not support it.")
+  print("goto-preview: Error calling LSP " .. lsp_call .. ". The current language lsp might not support it.")
 end
 
 --- Preview definition.
@@ -72,11 +77,72 @@ end
 ---        • focus_on_open boolean: Focus the floating window when opening it.
 ---        • dismiss_on_move boolean: Dismiss the floating window when moving the cursor.
 --- @see require("goto-preview").setup()
+-- Helper function to get LSP clients that support a specific method
+local function get_capable_clients(bufnr, method)
+  local clients = vim.lsp.get_clients({ bufnr = bufnr })
+  local capable_clients = {}
+  
+  -- Map LSP methods to their capability paths
+  local capability_map = {
+    ['textDocument/definition'] = 'definitionProvider',
+    ['textDocument/typeDefinition'] = 'typeDefinitionProvider', 
+    ['textDocument/implementation'] = 'implementationProvider',
+    ['textDocument/declaration'] = 'declarationProvider',
+    ['textDocument/references'] = 'referencesProvider',
+  }
+  
+  local capability_key = capability_map[method]
+  if not capability_key then
+    lib.logger.debug("Unknown method:", method)
+    return clients -- fallback to all clients
+  end
+  
+  for _, client in ipairs(clients) do
+    local server_capabilities = client.server_capabilities or client.capabilities
+    if server_capabilities and server_capabilities[capability_key] then
+      table.insert(capable_clients, client)
+      lib.logger.debug("Client supports", method, ":", client.name)
+    else
+      lib.logger.debug("Client does NOT support", method, ":", client.name)
+    end
+  end
+  
+  return capable_clients
+end
+
 M.lsp_request_definition = function(opts)
   local params = vim.lsp.util.make_position_params(nil, get_offset_encoding())
   local lsp_call = "textDocument/definition"
-  local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, lib.get_handler(lsp_call, opts))
-  lib.logger.debug("lsp_request_definition", success)
+  
+  -- Get only clients that support definition requests
+  local capable_clients = get_capable_clients(0, lsp_call)
+  
+  lib.logger.debug("Found", #capable_clients, "capable clients for", lsp_call)
+  
+  if #capable_clients == 0 then
+    lib.logger.debug("No capable clients found for", lsp_call)
+    print_lsp_error(lsp_call)
+    return
+  end
+  
+  -- Use buf_request_all to get all responses, then handle the first valid one
+  local success, request_id = pcall(vim.lsp.buf_request_all, 0, lsp_call, params, function(results)
+    lib.logger.debug("buf_request_all results:", vim.inspect(results))
+    
+    -- Find the first successful result from capable clients
+    for client_id, result in pairs(results) do
+      if result.result and not vim.tbl_isempty(result.result) then
+        lib.logger.debug("Using result from client_id:", client_id)
+        local handler = lib.get_handler(lsp_call, opts)
+        handler(nil, result.result, nil, nil)
+        return -- Only process the first valid result
+      end
+    end
+    
+    lib.logger.debug("No valid results found")
+  end)
+  
+  lib.logger.debug("lsp_request_definition", success, "request_id:", request_id)
   if not success then
     print_lsp_error(lsp_call)
   end

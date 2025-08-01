@@ -25,8 +25,10 @@ If applicable, add screenshots to help explain your problem.
 
 **Baseline (please complete the following information):**
  - OS. e.g `uname -a`:
- - Neovim version `nvim --version`
+ - Neovim version `nvim --version` (⚠️ **REQUIRED: Neovim >= 0.10**)
  - URL to your current config (if public)
+
+**⚠️ IMPORTANT:** This plugin requires Neovim >= 0.10. If you're using an older version, please upgrade before reporting issues.
 
 **Additional context**
 Add any other context about the problem here.

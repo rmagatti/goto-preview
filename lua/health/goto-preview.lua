@@ -1,1 +1,1 @@
-return require('goto-preview.health')
+return require "goto-preview.health"
