@@ -19,7 +19,14 @@ local function create_simple_logger(options)
       for _, v in ipairs(args) do
         msg = msg .. tostring(v) .. " "
       end
-      print(string.format("[%s][FALLBACK LOGGER - missing logger.nvim dependency] %s: %s", prefix, level:upper(), msg))
+      local formatted_msg = string.format("[%s][FALLBACK LOGGER - missing logger.nvim dependency] %s: %s", prefix,
+        level:upper(), msg)
+
+      -- Use vim.notify for user-visible notifications
+      vim.notify(formatted_msg, vim.log.levels[level:upper()])
+
+      -- Also log to messages for persistence
+      print(formatted_msg)
     end
   end
 
