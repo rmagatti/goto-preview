@@ -81,22 +81,22 @@ end
 local function get_capable_clients(bufnr, method)
   local clients = vim.lsp.get_clients({ bufnr = bufnr })
   local capable_clients = {}
-  
+
   -- Map LSP methods to their capability paths
   local capability_map = {
-    ['textDocument/definition'] = 'definitionProvider',
-    ['textDocument/typeDefinition'] = 'typeDefinitionProvider', 
-    ['textDocument/implementation'] = 'implementationProvider',
-    ['textDocument/declaration'] = 'declarationProvider',
-    ['textDocument/references'] = 'referencesProvider',
+    ["textDocument/definition"] = "definitionProvider",
+    ["textDocument/typeDefinition"] = "typeDefinitionProvider",
+    ["textDocument/implementation"] = "implementationProvider",
+    ["textDocument/declaration"] = "declarationProvider",
+    ["textDocument/references"] = "referencesProvider",
   }
-  
+
   local capability_key = capability_map[method]
   if not capability_key then
     lib.logger.debug("Unknown method:", method)
     return clients -- fallback to all clients
   end
-  
+
   for _, client in ipairs(clients) do
     local server_capabilities = client.server_capabilities or client.capabilities
     if server_capabilities and server_capabilities[capability_key] then
@@ -106,29 +106,29 @@ local function get_capable_clients(bufnr, method)
       lib.logger.debug("Client does NOT support", method, ":", client.name)
     end
   end
-  
+
   return capable_clients
 end
 
 M.lsp_request_definition = function(opts)
   local params = vim.lsp.util.make_position_params(nil, get_offset_encoding())
   local lsp_call = "textDocument/definition"
-  
+
   -- Get only clients that support definition requests
   local capable_clients = get_capable_clients(0, lsp_call)
-  
+
   lib.logger.debug("Found", #capable_clients, "capable clients for", lsp_call)
-  
+
   if #capable_clients == 0 then
     lib.logger.debug("No capable clients found for", lsp_call)
     print_lsp_error(lsp_call)
     return
   end
-  
+
   -- Use buf_request_all to get all responses, then handle the first valid one
   local success, request_id = pcall(vim.lsp.buf_request_all, 0, lsp_call, params, function(results)
     lib.logger.debug("buf_request_all results:", vim.inspect(results))
-    
+
     -- Find the first successful result from capable clients
     for client_id, result in pairs(results) do
       if result.result and not vim.tbl_isempty(result.result) then
@@ -138,10 +138,10 @@ M.lsp_request_definition = function(opts)
         return -- Only process the first valid result
       end
     end
-    
+
     lib.logger.debug("No valid results found")
   end)
-  
+
   lib.logger.debug("lsp_request_definition", success, "request_id:", request_id)
   if not success then
     print_lsp_error(lsp_call)
@@ -242,12 +242,7 @@ M.goto_preview_references = M.lsp_request_references
 M.apply_default_mappings = function()
   if M.conf.default_mappings then
     vim.keymap.set("n", "gpd", require("goto-preview").goto_preview_definition, { desc = "Preview definition" })
-    vim.keymap.set(
-      "n",
-      "gpt",
-      require("goto-preview").goto_preview_type_definition,
-      { desc = "Preview type definition" }
-    )
+    vim.keymap.set("n", "gpt", require("goto-preview").goto_preview_type_definition, { desc = "Preview type definition" })
     vim.keymap.set("n", "gpi", require("goto-preview").goto_preview_implementation, {
       desc = "Preview implementation",
     })

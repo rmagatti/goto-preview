@@ -50,8 +50,8 @@ M.setup_lib = function(conf)
   -- if ok then
   --   logger = logger_module:new { log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" }
   -- else
-    -- Use the simple logger implementation
-    logger = create_simple_logger { log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" }
+  -- Use the simple logger implementation
+  logger = create_simple_logger { log_level = M.conf.debug and "debug" or "info", prefix = "goto-preview" }
   -- end
 
   M.logger = logger
@@ -355,12 +355,7 @@ M.open_floating_win = function(target, position, opts)
 
   logger.debug("dismiss_on_move", dismiss())
   if dismiss() then
-    vim.api.nvim_command(
-      string.format(
-        "autocmd CursorMoved <buffer> ++once lua require('goto-preview').dismiss_preview(%d)",
-        preview_window
-      )
-    )
+    vim.api.nvim_command(string.format("autocmd CursorMoved <buffer> ++once lua require('goto-preview').dismiss_preview(%d)", preview_window))
   end
 
   -- Set position of the preview buffer equal to the target position so that correct preview position shows
@@ -586,7 +581,7 @@ end
 local handle = function(result, opts)
   logger.debug("handle called with result:", vim.inspect(result))
   logger.debug("current windows before processing:", vim.inspect(M.windows))
-  
+
   if not result then
     logger.debug "handle: result is nil, returning"
     return
@@ -605,7 +600,7 @@ local handle = function(result, opts)
 
   -- opts: focus_on_open, dismiss_on_move, etc.
   M.open_floating_win(target, cursor_position, opts)
-  
+
   logger.debug("current windows after processing:", vim.inspect(M.windows))
 end
 
