@@ -10,10 +10,13 @@ A small Neovim plugin for previewing native LSP's goto definition, type definiti
 #### ⌨️ vim.ui.input
 <img src="https://github.com/rmagatti/readme-assets/blob/main/vim-ui-input-fullres.gif" />
 
-### ⚠️ IMPORTANT NOTE
-Make sure you use Neovim > `0.5.1` or GUIs like [Goneovim](https://github.com/akiyosi/goneovim), [Uivonim](https://github.com/smolck/uivonim) or [Neovide](https://github.com/neovide/neovide).
+### ⚠️ IMPORTANT REQUIREMENTS
+**Minimum Neovim Version:** This plugin requires Neovim **≥ 0.10**.
 
-There is a bug in [Neovim `0.5`](https://github.com/neovim/neovim/issues/14735) that prevents the correct positioning of more than one preview window.
+#### Migration Note for Older Neovim Versions
+If you are using Neovim < 0.10, please upgrade to continue using this plugin. The plugin now uses simplified LSP handler expectations that are only available in Neovim 0.10 and later.
+
+**For users on older Neovim releases:** Consider using an older version of this plugin that supports your Neovim version, or upgrade your Neovim installation.
 
 ### 📦 Installation
 [Lazy.nvim](https://github.com/folke/lazy.nvim)
@@ -103,7 +106,15 @@ Example:
 Goto Preview should work with LSP responses for most languages now! If something doesn't work as expected, drop an issue and I'll be happy to check it out!
 
 **Note:** different language servers have potentially different shapes for the result of the `textDocument/definition`, `textDocument/typeDefinition`, `textDocument/implementation` and `textDocument/declaration` calls.
-Until more are added one can pass in custom responses through the `lsp_configs` config value. Just follow the same pattern returning two values, a `target (string)` and a `cursor_position ({line_num, col_num})`. The `data` parameter is the `[1]` of the LSP's `result` of the definition/implementation calls and is what gets passed into the custom `get_config` function.
+
+#### Simplified Handler Expectations
+Starting with Neovim 0.10, this plugin uses simplified LSP handler expectations. The handlers now expect a consistent 4-parameter signature: `(err, result, ctx, config)` instead of the legacy 3-parameter signature.
+
+**Custom LSP Response Handling:** You can customize LSP response processing through the `lsp_configs.get_config` function. This function should return two values:
+- `target (string)`: The URI or file path to open
+- `cursor_position ({line_num, col_num})`: The position to navigate to
+
+The `data` parameter passed to `get_config` is the first element of the LSP result or the result itself if it's not an array.
 
 
 ### Tested with
