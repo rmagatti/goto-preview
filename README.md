@@ -97,6 +97,16 @@ Example usage:
 require("goto-preview").close_all_win { skip_curr_window = true }
 ```
 
+### 🔍 LSP Capability Detection
+
+Goto Preview uses a conservative approach for LSP capability detection to handle multiple language servers gracefully:
+
+1. **Primary Strategy**: Uses language servers that explicitly advertise support for specific LSP methods (like `textDocument/definition`)
+2. **Fallback Strategy**: If no servers advertise the capability, attempts the request with all attached language servers
+3. **Result Selection**: Uses the first valid response from the preferred client set
+
+This approach ensures compatibility with language servers like jdtls that support definition requests but don't advertise the `definitionProvider` capability, while maintaining predictable behavior when multiple language servers are attached to the same buffer.
+
 ### Window manipulation
 One can manipulate floating windows with the regular Vim window moving commands. See `:h window-moving`.
 Example:
