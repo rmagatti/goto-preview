@@ -98,8 +98,7 @@ local function get_capable_clients(bufnr, method)
   end
 
   for _, client in ipairs(clients) do
-    local server_capabilities = client.server_capabilities or client.capabilities
-    if server_capabilities and server_capabilities[capability_key] then
+    if client.supports_method(method) then
       table.insert(capable_clients, client)
       lib.logger.debug("Client supports", method, ":", client.name)
     else
