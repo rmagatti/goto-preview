@@ -113,24 +113,36 @@ M.lsp_request_definition = function(opts)
   local params = vim.lsp.util.make_position_params(nil, get_offset_encoding())
   local lsp_call = "textDocument/definition"
 
-  -- Get only clients that support definition requests
+  -- Get clients that support definition requests
   local capable_clients = get_capable_clients(0, lsp_call)
+  local all_clients = vim.lsp.get_clients({ bufnr = 0 })
 
-  lib.logger.debug("Found", #capable_clients, "capable clients for", lsp_call)
+  lib.logger.debug("Found", #capable_clients, "capable clients for", lsp_call, "out of", #all_clients, "total clients")
 
-  if #capable_clients == 0 then
-    lib.logger.debug("No capable clients found for", lsp_call)
+  -- Strategy: prefer capable clients, but fallback to all clients if none capable
+  local clients_to_try = #capable_clients > 0 and capable_clients or all_clients
+  
+  if #capable_clients == 0 and #all_clients > 0 then
+    lib.logger.debug("No capable clients found, attempting fallback with all", #all_clients, "clients")
+  elseif #all_clients == 0 then
+    lib.logger.debug("No LSP clients attached to buffer")
     print_lsp_error(lsp_call)
     return
   end
 
-  -- Use buf_request_all to get all responses, then handle the first valid one
+  -- Create a map for easier lookup during result processing  
+  local client_ids_to_try = {}
+  for _, client in ipairs(clients_to_try) do
+    client_ids_to_try[client.id] = true
+  end
+
+  -- Use buf_request_all but only process results from our target clients
   local success, request_id = pcall(vim.lsp.buf_request_all, 0, lsp_call, params, function(results)
     lib.logger.debug("buf_request_all results:", vim.inspect(results))
 
-    -- Find the first successful result from capable clients
+    -- Process results only from clients we intended to query
     for client_id, result in pairs(results) do
-      if result.result and not vim.tbl_isempty(result.result) then
+      if result.result and not vim.tbl_isempty(result.result) and client_ids_to_try[client_id] then
         lib.logger.debug("Using result from client_id:", client_id)
         local handler = lib.get_handler(lsp_call, opts)
         handler(nil, result.result, nil, nil)
@@ -138,7 +150,8 @@ M.lsp_request_definition = function(opts)
       end
     end
 
-    lib.logger.debug("No valid results found")
+    lib.logger.debug("No valid results found from target clients")
+    print_lsp_error(lsp_call)
   end)
 
   lib.logger.debug("lsp_request_definition", success, "request_id:", request_id)
