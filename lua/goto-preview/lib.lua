@@ -626,13 +626,17 @@ local handle_multiple_locations = function(result, prompt_title, opts)
     return
   end
 
-  -- Check if result is a list with multiple locations or a single location
+  -- LSP typically returns an array of locations (Location[]) or null
+  -- Some servers might return a single location object directly (non-standard)
   if vim.islist(result) then
     local items = {}
     vim.list_extend(items, vim.lsp.util.locations_to_items(result, "utf-8") or {})
+    -- open_references_previewer handles both single and multiple items:
+    -- - Single item: opens directly without showing picker (line 564-568)
+    -- - Multiple items: shows picker to choose from
     open_references_previewer(prompt_title, items)
   else
-    -- Single result or direct result, use the original handle function
+    -- Fallback for non-standard single location responses
     handle(result, opts)
   end
 end
