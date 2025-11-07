@@ -626,8 +626,8 @@ local handle_multiple_locations = function(result, prompt_title, opts)
     return
   end
 
-  -- Handle the case where result is a table with multiple locations
-  if vim.islist(result) and #result > 1 then
+  -- Check if result is a list with multiple locations or a single location
+  if vim.islist(result) then
     local items = {}
     vim.list_extend(items, vim.lsp.util.locations_to_items(result, "utf-8") or {})
     open_references_previewer(prompt_title, items)
@@ -642,9 +642,17 @@ local legacy_handler = function(lsp_call, opts)
     if lsp_call ~= nil and lsp_call == "textDocument/references" then
       logger.debug("raw result", vim.inspect(result))
       handle_references(result)
-    elseif lsp_call ~= nil and lsp_call == "textDocument/implementation" then
+    elseif
+      lsp_call ~= nil
+      and (lsp_call == "textDocument/implementation" or lsp_call == "textDocument/typeDefinition" or lsp_call == "textDocument/declaration")
+    then
       logger.debug("raw result", vim.inspect(result))
-      handle_multiple_locations(result, "Implementations", opts)
+      local titles = {
+        ["textDocument/implementation"] = "Implementations",
+        ["textDocument/typeDefinition"] = "Type Definitions",
+        ["textDocument/declaration"] = "Declarations",
+      }
+      handle_multiple_locations(result, titles[lsp_call], opts)
     else
       handle(result, opts)
     end
@@ -656,9 +664,17 @@ local handler = function(lsp_call, opts)
     if lsp_call ~= nil and lsp_call == "textDocument/references" then
       logger.debug("raw result", vim.inspect(result))
       handle_references(result)
-    elseif lsp_call ~= nil and lsp_call == "textDocument/implementation" then
+    elseif
+      lsp_call ~= nil
+      and (lsp_call == "textDocument/implementation" or lsp_call == "textDocument/typeDefinition" or lsp_call == "textDocument/declaration")
+    then
       logger.debug("raw result", vim.inspect(result))
-      handle_multiple_locations(result, "Implementations", opts)
+      local titles = {
+        ["textDocument/implementation"] = "Implementations",
+        ["textDocument/typeDefinition"] = "Type Definitions",
+        ["textDocument/declaration"] = "Declarations",
+      }
+      handle_multiple_locations(result, titles[lsp_call], opts)
     else
       handle(result, opts)
     end
