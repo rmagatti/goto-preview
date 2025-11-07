@@ -121,7 +121,7 @@ M.lsp_request_definition = function(opts)
 
   -- Strategy: prefer capable clients, but fallback to all clients if none capable
   local clients_to_try = #capable_clients > 0 and capable_clients or all_clients
-  
+
   if #capable_clients == 0 and #all_clients > 0 then
     lib.logger.debug("No capable clients found, attempting fallback with all", #all_clients, "clients")
   elseif #all_clients == 0 then
@@ -130,7 +130,7 @@ M.lsp_request_definition = function(opts)
     return
   end
 
-  -- Create a map for easier lookup during result processing  
+  -- Create a map for easier lookup during result processing
   local client_ids_to_try = {}
   for _, client in ipairs(clients_to_try) do
     client_ids_to_try[client.id] = true

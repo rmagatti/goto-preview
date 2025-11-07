@@ -19,8 +19,7 @@ local function create_simple_logger(options)
       for _, v in ipairs(args) do
         msg = msg .. tostring(v) .. " "
       end
-      local formatted_msg = string.format("[%s][FALLBACK LOGGER - missing logger.nvim dependency] %s: %s", prefix,
-        level:upper(), msg)
+      local formatted_msg = string.format("[%s][FALLBACK LOGGER - missing logger.nvim dependency] %s: %s", prefix, level:upper(), msg)
 
       -- Use vim.notify for user-visible notifications
       vim.notify(formatted_msg, vim.log.levels[level:upper()])
@@ -107,9 +106,9 @@ M.setup_custom_input = function()
 
     -- Calculate appropriate width based on content + padding
     local content_width = #initial_text
-    local min_width = 20  -- Minimum width for small inputs
+    local min_width = 20 -- Minimum width for small inputs
     local max_width = 120 -- Maximum width to prevent too wide windows
-    local padding = 16    -- Extra space for cursor, line numbers, and comfort
+    local padding = 16 -- Extra space for cursor, line numbers, and comfort
     local width = math.min(max_width, math.max(min_width, content_width + padding))
 
     -- Open the floating window using our existing function
@@ -362,8 +361,7 @@ M.open_floating_win = function(target, position, opts)
 
   logger.debug("dismiss_on_move", dismiss())
   if dismiss() then
-    vim.api.nvim_command(string.format(
-      "autocmd CursorMoved <buffer> ++once lua require('goto-preview').dismiss_preview(%d)", preview_window))
+    vim.api.nvim_command(string.format("autocmd CursorMoved <buffer> ++once lua require('goto-preview').dismiss_preview(%d)", preview_window))
   end
 
   -- Set position of the preview buffer equal to the target position so that correct preview position shows
@@ -486,29 +484,29 @@ local providers = {
     end
 
     pickers
-        .new(opts, {
-          prompt_title = prompt_title,
-          finder = finders.new_table {
-            results = items,
-            entry_maker = entry_maker,
-          },
-          previewer = previewer,
-          sorter = telescope_conf.generic_sorter(opts),
-          attach_mappings = function(prompt_bufnr)
-            actions.select_default:replace(function()
-              local selection = action_state.get_selected_entry()
-              actions.close(prompt_bufnr)
+      .new(opts, {
+        prompt_title = prompt_title,
+        finder = finders.new_table {
+          results = items,
+          entry_maker = entry_maker,
+        },
+        previewer = previewer,
+        sorter = telescope_conf.generic_sorter(opts),
+        attach_mappings = function(prompt_bufnr)
+          actions.select_default:replace(function()
+            local selection = action_state.get_selected_entry()
+            actions.close(prompt_bufnr)
 
-              _open_references_window(selection.value.filename, {
-                selection.value.lnum,
-                selection.value.col,
-              })
-            end)
+            _open_references_window(selection.value.filename, {
+              selection.value.lnum,
+              selection.value.col,
+            })
+          end)
 
-            return true
-          end,
-        })
-        :find()
+          return true
+        end,
+      })
+      :find()
   end,
 
   mini_pick = function(prompt_title, items)
@@ -623,11 +621,30 @@ local handle_references = function(result)
   open_references_previewer("References", items)
 end
 
+local handle_multiple_locations = function(result, prompt_title, opts)
+  if not result then
+    return
+  end
+
+  -- Handle the case where result is a table with multiple locations
+  if vim.islist(result) and #result > 1 then
+    local items = {}
+    vim.list_extend(items, vim.lsp.util.locations_to_items(result, "utf-8") or {})
+    open_references_previewer(prompt_title, items)
+  else
+    -- Single result or direct result, use the original handle function
+    handle(result, opts)
+  end
+end
+
 local legacy_handler = function(lsp_call, opts)
   return function(_, _, result)
     if lsp_call ~= nil and lsp_call == "textDocument/references" then
       logger.debug("raw result", vim.inspect(result))
       handle_references(result)
+    elseif lsp_call ~= nil and lsp_call == "textDocument/implementation" then
+      logger.debug("raw result", vim.inspect(result))
+      handle_multiple_locations(result, "Implementations", opts)
     else
       handle(result, opts)
     end
@@ -639,6 +656,9 @@ local handler = function(lsp_call, opts)
     if lsp_call ~= nil and lsp_call == "textDocument/references" then
       logger.debug("raw result", vim.inspect(result))
       handle_references(result)
+    elseif lsp_call ~= nil and lsp_call == "textDocument/implementation" then
+      logger.debug("raw result", vim.inspect(result))
+      handle_multiple_locations(result, "Implementations", opts)
     else
       handle(result, opts)
     end
