@@ -73,11 +73,19 @@ local function is_curr_buf(buffer)
 end
 
 local run_post_open_hook_function = function(buffer, new_window)
+  if type(M.conf.post_open_hook) ~= "function" then
+    return
+  end
+
   local success, result = pcall(M.conf.post_open_hook, buffer, new_window)
   logger.debug("post_open_hook call success:", success, result)
 end
 
 local run_post_close_hook_function = function(buffer, new_window)
+  if type(M.conf.post_close_hook) ~= "function" then
+    return
+  end
+
   local success, result = pcall(M.conf.post_close_hook, buffer, new_window)
   logger.debug("post_close_hook call success:", success, result)
 end
@@ -191,7 +199,7 @@ M.setup_custom_input = function()
 
     -- Start in normal mode by default
     vim.cmd "stopinsert"
-    vim.notify("Press <CR> to confirm, <Esc> to cancel", "info")
+    vim.notify("Press <CR> to confirm, <Esc> to cancel", vim.log.levels.INFO)
   end
 end
 

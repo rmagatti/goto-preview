@@ -73,11 +73,9 @@ local function print_lsp_error(lsp_call)
 end
 
 --- Preview definition.
---- @param opts table: Custom config
----        • focus_on_open boolean: Focus the floating window when opening it.
----        • dismiss_on_move boolean: Dismiss the floating window when moving the cursor.
---- @see require("goto-preview").setup()
--- Helper function to get LSP clients that support a specific method
+--- @param bufnr number: Buffer number
+--- @param method string: LSP method to check capabilities for
+--- @return table: List of capable LSP clients
 local function get_capable_clients(bufnr, method)
   local clients = vim.lsp.get_clients({ bufnr = bufnr })
   local capable_clients = {}
@@ -98,7 +96,7 @@ local function get_capable_clients(bufnr, method)
   end
 
   for _, client in ipairs(clients) do
-    if client.supports_method(method) then
+    if client.supports_method and client:supports_method(method, 0) then
       table.insert(capable_clients, client)
       lib.logger.debug("Client supports", method, ":", client.name)
     else
