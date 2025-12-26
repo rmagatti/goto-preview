@@ -73,11 +73,9 @@ local function print_lsp_error(lsp_call)
 end
 
 --- Preview definition.
---- @param opts table: Custom config
----        • focus_on_open boolean: Focus the floating window when opening it.
----        • dismiss_on_move boolean: Dismiss the floating window when moving the cursor.
---- @see require("goto-preview").setup()
--- Helper function to get LSP clients that support a specific method
+--- @param bufnr number: Buffer number
+--- @param method string: LSP method to check capabilities for
+--- @return table: List of capable LSP clients
 local function get_capable_clients(bufnr, method)
   local clients = vim.lsp.get_clients({ bufnr = bufnr })
   local capable_clients = {}
@@ -98,7 +96,7 @@ local function get_capable_clients(bufnr, method)
   end
 
   for _, client in ipairs(clients) do
-    if client.supports_method(method) then
+    if client.supports_method and client:supports_method(method, 0) then
       table.insert(capable_clients, client)
       lib.logger.debug("Client supports", method, ":", client.name)
     else
@@ -121,7 +119,7 @@ M.lsp_request_definition = function(opts)
 
   -- Strategy: prefer capable clients, but fallback to all clients if none capable
   local clients_to_try = #capable_clients > 0 and capable_clients or all_clients
-  
+
   if #capable_clients == 0 and #all_clients > 0 then
     lib.logger.debug("No capable clients found, attempting fallback with all", #all_clients, "clients")
   elseif #all_clients == 0 then
@@ -130,7 +128,7 @@ M.lsp_request_definition = function(opts)
     return
   end
 
-  -- Create a map for easier lookup during result processing  
+  -- Create a map for easier lookup during result processing
   local client_ids_to_try = {}
   for _, client in ipairs(clients_to_try) do
     client_ids_to_try[client.id] = true
